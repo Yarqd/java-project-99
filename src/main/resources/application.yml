@@ -1,0 +1,45 @@
+spring:
+  profiles:
+    active: dev  # Установите на 'prod' через переменные окружения при деплое
+
+# Конфигурация для профиля "dev" (H2 Database)
+---
+spring:
+  config:
+    activate:
+      on-profile: dev
+  datasource:
+    url: jdbc:h2:mem:devdb  # URL для базы данных H2
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:  # Оставьте пустым для H2
+    schema: classpath:db/schema.sql
+  h2:
+    console:
+      enabled: true
+      path: /h2-console  # Путь к H2 консоли
+  jpa:
+    hibernate:
+      ddl-auto: create  # Используйте 'create' или 'update' для разработки
+    show-sql: true  # Показывать SQL-запросы в логах
+
+# Конфигурация для профиля "prod" (PostgreSQL)
+---
+spring:
+  config:
+    activate:
+      on-profile: prod
+  datasource:
+    url: jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}  # Используем переменные окружения
+    driver-class-name: org.postgresql.Driver
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+  jpa:
+    hibernate:
+      ddl-auto: update  # Используйте 'update' для продакшена
+    show-sql: true  # Показывать SQL-запросы в логах
+
+logging:
+  level:
+    org.springframework: DEBUG
+    org.hibernate: DEBUG
