@@ -1,5 +1,6 @@
 package hexlet.code.demo.config;
 
+import hexlet.code.demo.security.JwtAuthorizationFilter;
 import hexlet.code.demo.service.UserDetailsServiceImpl;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -10,6 +11,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 import static org.springframework.security.config.Customizer.withDefaults;
 
@@ -29,13 +31,16 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, AuthenticationManager authManager)
+            throws Exception {
         http
                 .csrf(csrf -> csrf.disable())  // Отключаем CSRF
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/users/**").authenticated()  // Защищаем маршруты API
                         .anyRequest().permitAll()  // Разрешаем доступ к остальным маршрутам
                 )
+                .addFilterBefore(new JwtAuthorizationFilter(authManager), UsernamePasswordAuthenticationFilter.class)
+                // Добавляем фильтр для проверки токенов
                 .httpBasic(withDefaults())  // Используем Basic Auth
                 .logout(logout -> logout
                         .logoutUrl("/logout")  // URL для логаута
@@ -53,6 +58,7 @@ public class SecurityConfig {
         return authenticationManagerBuilder.build();
     }
 }
+
 
 /*
 
