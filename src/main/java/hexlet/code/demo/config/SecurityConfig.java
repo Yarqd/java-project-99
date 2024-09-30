@@ -36,7 +36,10 @@ public class SecurityConfig {
         http
                 .csrf(csrf -> csrf.disable())  // Отключаем CSRF
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/users/**").authenticated()  // Защищаем маршруты API
+                        // Открываем доступ для создания пользователей без авторизации
+                        .requestMatchers("/api/users").permitAll()
+                        // Защищаем маршруты API для остальных операций с пользователями
+                        .requestMatchers("/api/users/**").authenticated()
                         .anyRequest().permitAll()  // Разрешаем доступ к остальным маршрутам
                 )
                 .addFilterBefore(new JwtAuthorizationFilter(authManager), UsernamePasswordAuthenticationFilter.class)
@@ -58,7 +61,6 @@ public class SecurityConfig {
         return authenticationManagerBuilder.build();
     }
 }
-
 
 /*
 
