@@ -2,8 +2,10 @@ package hexlet.code.demo;
 
 import hexlet.code.demo.dto.UserCreateDTO;
 import hexlet.code.demo.model.TaskStatus;
+import hexlet.code.demo.model.Label;
 import hexlet.code.demo.service.UserService;
 import hexlet.code.demo.repository.TaskStatusRepository;
+import hexlet.code.demo.repository.LabelRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
@@ -17,6 +19,9 @@ public class AppApplication implements CommandLineRunner {
 
     @Autowired
     private TaskStatusRepository taskStatusRepository;
+
+    @Autowired
+    private LabelRepository labelRepository;  // Добавляем репозиторий для меток
 
     public static void main(String[] args) {
         SpringApplication.run(AppApplication.class, args);
@@ -37,6 +42,7 @@ public class AppApplication implements CommandLineRunner {
             System.out.println("Admin user created: hexlet@example.com");
         }
 
+        // Инициализация статусов задач
         if (taskStatusRepository.count() == 0) {
             taskStatusRepository.save(new TaskStatus("Draft", "draft"));
             taskStatusRepository.save(new TaskStatus("To Review", "to_review"));
@@ -45,6 +51,14 @@ public class AppApplication implements CommandLineRunner {
             taskStatusRepository.save(new TaskStatus("Published", "published"));
 
             System.out.println("Default task statuses created: Draft, To Review, To Be Fixed, To Publish, Published");
+        }
+
+        // Инициализация дефолтных меток
+        if (labelRepository.count() == 0) {
+            labelRepository.save(new Label("feature"));
+            labelRepository.save(new Label("bug"));
+
+            System.out.println("Default labels created: feature, bug");
         }
     }
 }
