@@ -3,6 +3,7 @@ plugins {
 	id 'org.springframework.boot' version '3.3.3'
 	id 'io.spring.dependency-management' version '1.1.6'
 	id 'checkstyle'
+	id 'jacoco'
 }
 
 group = 'hexlet.code'
@@ -43,10 +44,24 @@ dependencies {
 
 tasks.named('test') {
 	useJUnitPlatform()
+	finalizedBy 'jacocoTestReport' // Генерация отчёта после тестов
 }
 
 application {
 	mainClass = 'hexlet.code.demo.AppApplication'
+}
+
+jacoco {
+	toolVersion = '0.8.10'
+}
+
+tasks.jacocoTestReport {
+	dependsOn test
+	reports {
+		xml.required = true
+		html.required = true
+		html.outputLocation = file("${buildDir}/reports/jacoco")
+	}
 }
 
 checkstyle {
