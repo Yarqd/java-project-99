@@ -15,9 +15,14 @@ public class TaskController {
     @Autowired
     private TaskRepository taskRepository;
 
+    // Метод получения всех задач с фильтрацией
     @GetMapping
-    public List<Task> getAllTasks() {
-        return taskRepository.findAll();
+    public List<Task> getTasks(
+            @RequestParam(required = false) String titleCont,
+            @RequestParam(required = false) Long assigneeId,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) Long labelId) {
+        return taskRepository.findTasksByFilters(titleCont, assigneeId, status, labelId);
     }
 
     @GetMapping("/{id}")
@@ -50,7 +55,7 @@ public class TaskController {
         return taskRepository.findById(id)
                 .map(task -> {
                     taskRepository.delete(task);
-                    return ResponseEntity.noContent().build(); // Возвращаем результат
+                    return ResponseEntity.noContent().build();
                 })
                 .orElse(ResponseEntity.notFound().build());
     }

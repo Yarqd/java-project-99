@@ -42,6 +42,18 @@ public class User {
     @Column
     private LocalDateTime updatedAt;
 
+    // Конструктор с параметрами
+    public User(String email, String firstName, String lastName, String password) {
+        this.email = email;
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.password = password;
+    }
+
+    // Пустой конструктор по умолчанию (если нужен для JPA)
+    public User() {
+    }
+
     // Геттеры и сеттеры
     public Long getId() {
         return id;
