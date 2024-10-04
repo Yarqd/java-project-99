@@ -6,6 +6,8 @@ import hexlet.code.demo.model.Label;
 import hexlet.code.demo.service.UserService;
 import hexlet.code.demo.repository.TaskStatusRepository;
 import hexlet.code.demo.repository.LabelRepository;
+import io.sentry.Sentry;
+import io.sentry.SentryOptions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
@@ -21,9 +23,16 @@ public class AppApplication implements CommandLineRunner {
     private TaskStatusRepository taskStatusRepository;
 
     @Autowired
-    private LabelRepository labelRepository;  // Добавляем репозиторий для меток
+    private LabelRepository labelRepository;
 
     public static void main(String[] args) {
+        // Инициализация Sentry
+        Sentry.init(options -> {
+            options.setDsn(System.getenv("SENTRY_AUTH_TOKEN"));
+            options.setTracesSampleRate(1.0);
+            options.setDebug(true);
+        });
+
         SpringApplication.run(AppApplication.class, args);
     }
 

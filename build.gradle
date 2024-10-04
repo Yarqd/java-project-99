@@ -2,7 +2,7 @@ plugins {
 	id 'application'
 	id 'org.springframework.boot' version '3.3.3'
 	id 'io.spring.dependency-management' version '1.1.6'
-	id 'checkstyle' // Добавляем плагин Checkstyle
+	id 'checkstyle'
 }
 
 group = 'hexlet.code'
@@ -35,6 +35,10 @@ dependencies {
 	runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5'
 	runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5'
 
+	// Sentry dependency
+	implementation 'io.sentry:sentry-spring-boot-starter:6.16.0'
+	implementation 'io.sentry:sentry-spring-boot-starter-jakarta:6.25.0'
+	implementation 'io.sentry:sentry-logback:6.25.0'
 }
 
 tasks.named('test') {
