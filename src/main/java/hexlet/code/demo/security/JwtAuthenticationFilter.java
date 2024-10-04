@@ -24,6 +24,14 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
         setFilterProcessesUrl("/api/login");  // Указываем путь для логина
     }
 
+    /**
+     * Попытка аутентификации пользователя.
+     *
+     * @param request  запрос клиента
+     * @param response ответ сервера
+     * @return результат аутентификации
+     * @throws AuthenticationException в случае ошибки аутентификации
+     */
     @Override
     public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response)
             throws AuthenticationException {
@@ -45,6 +53,16 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
         }
     }
 
+    /**
+     * Успешная аутентификация.
+     * Генерация JWT токена и возврат его в ответе.
+     *
+     * @param request     запрос клиента
+     * @param response    ответ сервера
+     * @param chain       цепочка фильтров
+     * @param authResult  результат аутентификации
+     * @throws IOException в случае ошибки ввода-вывода
+     */
     @Override
     protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response,
                                             FilterChain chain, Authentication authResult) throws IOException {

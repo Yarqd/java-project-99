@@ -16,6 +16,15 @@ public class TaskRepositoryCustomImpl implements TaskRepositoryCustom {
     @PersistenceContext
     private EntityManager entityManager;
 
+    /**
+     * Метод для поиска задач с фильтрацией по названию, исполнителю, статусу и метке.
+     *
+     * @param titleCont часть названия задачи для поиска (может быть null)
+     * @param assigneeId идентификатор исполнителя (может быть null)
+     * @param status название статуса задачи (может быть null)
+     * @param labelId идентификатор метки (может быть null)
+     * @return список задач, соответствующих указанным фильтрам
+     */
     @Override
     public List<Task> findTasksByFilters(String titleCont, Long assigneeId, String status, Long labelId) {
         CriteriaBuilder cb = entityManager.getCriteriaBuilder();

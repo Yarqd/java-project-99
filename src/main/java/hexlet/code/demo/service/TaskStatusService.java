@@ -14,24 +14,46 @@ public class TaskStatusService {
     @Autowired
     private TaskStatusRepository taskStatusRepository;
 
-    // Создание нового статуса
+    /**
+     * Создание нового статуса задачи.
+     *
+     * @param taskStatus объект статуса задачи для сохранения
+     * @return созданный статус задачи
+     */
     @Transactional
     public TaskStatus createTaskStatus(TaskStatus taskStatus) {
         return taskStatusRepository.save(taskStatus);
     }
 
-    // Получение всех статусов
+    /**
+     * Получение всех статусов задач.
+     *
+     * @return список всех статусов задач
+     */
     public List<TaskStatus> getAllTaskStatuses() {
         return taskStatusRepository.findAll();
     }
 
-    // Получение статуса по ID
+    /**
+     * Получение статуса задачи по его идентификатору.
+     *
+     * @param id идентификатор статуса задачи
+     * @return объект статуса задачи
+     * @throws RuntimeException если статус задачи не найден
+     */
     public TaskStatus getTaskStatusById(Long id) {
         return taskStatusRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("TaskStatus not found"));
     }
 
-    // Обновление статуса
+    /**
+     * Обновление статуса задачи.
+     *
+     * @param id идентификатор существующего статуса задачи
+     * @param taskStatus объект с обновленными данными статуса задачи
+     * @return обновленный статус задачи
+     * @throws RuntimeException если статус задачи не найден
+     */
     @Transactional
     public TaskStatus updateTaskStatus(Long id, TaskStatus taskStatus) {
         TaskStatus existingTaskStatus = taskStatusRepository.findById(id)
@@ -41,7 +63,12 @@ public class TaskStatusService {
         return taskStatusRepository.save(existingTaskStatus);
     }
 
-    // Удаление статуса
+    /**
+     * Удаление статуса задачи по его идентификатору.
+     *
+     * @param id идентификатор статуса задачи
+     * @throws RuntimeException если статус задачи не найден
+     */
     @Transactional
     public void deleteTaskStatus(Long id) {
         if (!taskStatusRepository.existsById(id)) {

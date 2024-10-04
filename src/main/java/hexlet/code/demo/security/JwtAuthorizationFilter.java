@@ -21,9 +21,18 @@ public class JwtAuthorizationFilter extends BasicAuthenticationFilter {
         super(authManager);
     }
 
+    /**
+     * Фильтрует запросы, проверяя наличие и корректность JWT токена в заголовке Authorization.
+     *
+     * @param request запрос
+     * @param response ответ
+     * @param chain цепочка фильтров
+     * @throws IOException если возникает ошибка ввода-вывода
+     * @throws ServletException если возникает ошибка фильтрации
+     */
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
-            throws IOException, ServletException {  // Добавил ServletException для исключения
+            throws IOException, ServletException {
         String header = request.getHeader("Authorization");
 
         // Проверяем наличие заголовка Authorization и корректность токена
@@ -32,22 +41,30 @@ public class JwtAuthorizationFilter extends BasicAuthenticationFilter {
             return;
         }
 
+        // Получаем аутентификацию из токена
         UsernamePasswordAuthenticationToken authentication = getAuthentication(request);
 
-        // Устанавливаем аутентификацию в контексте
+        // Устанавливаем аутентификацию в контексте безопасности, если она найдена
         if (authentication != null) {
             SecurityContextHolder.getContext().setAuthentication(authentication);
         }
+
+        // Продолжаем выполнение цепочки фильтров
         chain.doFilter(request, response);
     }
 
-    // Извлекаем аутентификацию из токена
+    /**
+     * Извлекает аутентификацию из JWT токена.
+     *
+     * @param request запрос
+     * @return объект аутентификации или null, если токен некорректный
+     */
     private UsernamePasswordAuthenticationToken getAuthentication(HttpServletRequest request) {
         String token = request.getHeader("Authorization");
 
         if (token != null) {
-            // Разбираем токен
-            String user = Jwts.parserBuilder()  // Обновил метод, используя parserBuilder
+            // Парсим JWT токен и извлекаем пользователя
+            String user = Jwts.parserBuilder()
                     .setSigningKey(Keys.hmacShaKeyFor("SecretKeyToGenJWTs".getBytes(StandardCharsets.UTF_8)))
                     // Ключ подписи
                     .build()

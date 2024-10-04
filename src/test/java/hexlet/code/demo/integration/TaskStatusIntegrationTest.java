@@ -9,11 +9,11 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -30,6 +30,10 @@ public class TaskStatusIntegrationTest {
 
     private TaskStatus taskStatus;
 
+    /**
+     * Метод, который выполняется перед каждым тестом для очистки репозитория
+     * и инициализации объекта TaskStatus для использования в тестах.
+     */
     @BeforeEach
     void setUp() {
         taskStatusRepository.deleteAll();
@@ -46,6 +50,4 @@ public class TaskStatusIntegrationTest {
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.name").value(taskStatus.getName()));
     }
-
-    // Дополнительные тесты для всех CRUD операций
 }

@@ -15,9 +15,15 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-import static org.hamcrest.Matchers.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.hasSize;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -40,14 +46,16 @@ public class LabelControllerTest {
 
     private Label label;
 
+    /**
+     * Метод, который выполняется перед каждым тестом для инициализации необходимых данных.
+     * Очищает репозитории и создает новую метку для использования в тестах.
+     */
     @BeforeEach
     public void setUp() {
-        // Очищаем все репозитории перед каждым тестом, чтобы избежать конфликта с инициализацией данных
         taskRepository.deleteAll();
         taskStatusRepository.deleteAll();
         labelRepository.deleteAll();
 
-        // Добавляем метку для использования в тестах
         label = new Label("Bug");
         labelRepository.save(label);
     }
@@ -105,25 +113,21 @@ public class LabelControllerTest {
 
     @Test
     public void testDeleteLabelWithTasks() throws Exception {
-        // Создаем статус задачи
         TaskStatus taskStatus = new TaskStatus("Draft", "draft");
         taskStatusRepository.save(taskStatus);
 
-        // Создаем новую метку для задачи, чтобы избежать конфликта с инициализированными метками
         Label newLabel = new Label("New Feature");
         labelRepository.save(newLabel);
 
-        // Создаем задачу и связываем ее с меткой
         Task task = new Task();
         task.setName("Test Task");
         task.setTaskStatus(taskStatus);
-        task.getLabels().add(newLabel); // Связываем задачу с новой меткой
+        task.getLabels().add(newLabel);
         taskRepository.save(task);
 
-        // Пытаемся удалить метку, которая связана с задачей
         mockMvc.perform(delete("/api/labels/" + newLabel.getId())
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest())
-                .andExpect(content().string(containsString("Cannot delete label, it is associated with tasks.")));
+                .andExpect(content().string(containsString("Нельзя удалить метку, она связана с задачами.")));
     }
 }

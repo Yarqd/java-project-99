@@ -7,7 +7,6 @@ import hexlet.code.demo.service.UserService;
 import hexlet.code.demo.repository.TaskStatusRepository;
 import hexlet.code.demo.repository.LabelRepository;
 import io.sentry.Sentry;
-import io.sentry.SentryOptions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
@@ -36,6 +35,13 @@ public class AppApplication implements CommandLineRunner {
         SpringApplication.run(AppApplication.class, args);
     }
 
+    /**
+     * Метод, который запускается при старте приложения.
+     * Выполняет инициализацию администратора, статусов задач и меток.
+     *
+     * @param args аргументы командной строки
+     * @throws Exception если возникает ошибка во время выполнения
+     */
     @Override
     public void run(String... args) throws Exception {
         // Проверяем, есть ли пользователь-администратор

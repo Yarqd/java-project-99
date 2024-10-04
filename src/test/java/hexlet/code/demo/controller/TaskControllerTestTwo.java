@@ -46,6 +46,10 @@ public class TaskControllerTestTwo {
     private TaskStatus taskStatus;
     private User user;
 
+    /**
+     * Метод, который выполняется перед каждым тестом для инициализации необходимых данных.
+     * Очищает репозитории и создает новую метку для использования в тестах.
+     */
     @BeforeEach
     public void setUp() {
         taskRepository.deleteAll();
@@ -88,7 +92,8 @@ public class TaskControllerTestTwo {
 
     @Test
     public void testFilterByAllParams() throws Exception {
-        System.out.println("Executing filter by all params: title='Test Task', assigneeId=" + user.getId() + ", status='in_progress'");
+        System.out.println("Executing filter by all params: title='Test Task', assigneeId=" + user.getId()
+                + ", status='in_progress'");
 
         mockMvc.perform(get("/api/tasks")
                         .param("titleCont", "Test Task")

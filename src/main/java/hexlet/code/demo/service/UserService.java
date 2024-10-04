@@ -22,7 +22,12 @@ public class UserService {
     @Autowired
     private BCryptPasswordEncoder passwordEncoder;
 
-    // Создание пользователя
+    /**
+     * Создание нового пользователя на основе переданных данных.
+     *
+     * @param userDTO данные для создания пользователя
+     * @return данные о созданном пользователе в виде DTO
+     */
     @Transactional
     public UserResponseDTO createUser(UserCreateDTO userDTO) {
         User user = new User();
@@ -34,27 +39,40 @@ public class UserService {
         return convertToResponseDTO(user);
     }
 
-    // Получение всех пользователей
+    /**
+     * Получение списка всех пользователей.
+     *
+     * @return список всех пользователей в виде DTO
+     */
     public List<UserResponseDTO> getAllUsers() {
         return userRepository.findAll().stream()
                 .map(this::convertToResponseDTO)
                 .collect(Collectors.toList());
     }
 
-    // Получение пользователя по ID
+    /**
+     * Получение пользователя по его идентификатору.
+     *
+     * @param id идентификатор пользователя
+     * @return данные о пользователе в виде DTO
+     */
     public UserResponseDTO getUserById(Long id) {
         return userRepository.findById(id)
                 .map(this::convertToResponseDTO)
-                .orElseThrow(() -> new RuntimeException("User not found")); // Здесь выбрасываем исключение
-                                                                            // если пользователь не найден
+                .orElseThrow(() -> new RuntimeException("User not found")); // Исключение, если пользователь не найден
     }
 
-    // Обновление пользователя
+    /**
+     * Обновление данных пользователя.
+     *
+     * @param id идентификатор пользователя
+     * @param userDTO данные для обновления пользователя
+     * @return обновленные данные о пользователе в виде DTO
+     */
     @Transactional
     public UserResponseDTO updateUser(Long id, UserUpdateDTO userDTO) {
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found")); // Здесь выбрасываем исключение
-                                                                            // если пользователь не найден
+                .orElseThrow(() -> new RuntimeException("User not found")); // Исключение, если пользователь не найден
 
         if (userDTO.getEmail() != null) {
             user.setEmail(userDTO.getEmail());
@@ -73,16 +91,25 @@ public class UserService {
         return convertToResponseDTO(user);
     }
 
-    // Удаление пользователя
+    /**
+     * Удаление пользователя по его идентификатору.
+     *
+     * @param id идентификатор пользователя
+     */
     @Transactional
     public void deleteUser(Long id) {
         if (!userRepository.existsById(id)) {
-            throw new RuntimeException("User not found"); // Проверяем существование пользователя перед удалением
+            throw new RuntimeException("User not found"); // Исключение, если пользователь не найден
         }
         userRepository.deleteById(id);
     }
 
-    // Преобразование User в UserResponseDTO
+    /**
+     * Преобразование сущности пользователя в DTO.
+     *
+     * @param user объект пользователя
+     * @return DTO с данными пользователя
+     */
     public UserResponseDTO convertToResponseDTO(User user) {
         UserResponseDTO responseDTO = new UserResponseDTO();
         responseDTO.setId(user.getId());
