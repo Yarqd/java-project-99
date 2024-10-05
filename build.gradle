@@ -47,7 +47,7 @@ tasks.named('test') {
 }
 
 application {
-	mainClass = 'hexlet.code.app.AppApplication'
+	mainClass = 'hexlet.code.demo.AppApplication'
 }
 
 // jacoco конфигурации удалены, так как мы отключаем генерацию отчета
