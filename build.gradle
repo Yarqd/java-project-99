@@ -40,6 +40,8 @@ dependencies {
 	implementation 'io.sentry:sentry-spring-boot-starter:6.16.0'
 	implementation 'io.sentry:sentry-spring-boot-starter-jakarta:6.25.0'
 	implementation 'io.sentry:sentry-logback:6.25.0'
+
+	testImplementation "com.github.codeclimate:test-reporter:0.6.0"
 }
 
 tasks.named('test') {
@@ -55,12 +57,13 @@ jacoco {
 	toolVersion = '0.8.10'
 }
 
-tasks.jacocoTestReport {
-	dependsOn test
+test {
+	finalizedBy jacocoTestReport
+}
+
+jacocoTestReport {
 	reports {
 		xml.required = true
-		html.required = true
-		html.outputLocation = file("${buildDir}/reports/jacoco")
 	}
 }
 
