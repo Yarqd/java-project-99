@@ -3,7 +3,7 @@ plugins {
 	id 'org.springframework.boot' version '3.3.3'
 	id 'io.spring.dependency-management' version '1.1.6'
 	id 'checkstyle'
-	id 'jacoco'
+	// jacoco плагин убран, так как вы хотите отключить покрытие тестами
 }
 
 group = 'hexlet.code'
@@ -44,29 +44,14 @@ dependencies {
 
 tasks.named('test') {
 	useJUnitPlatform()
-	finalizedBy 'jacocoTestReport' // Генерация отчёта после тестов
+	// Убрана финализация задачи jacocoTestReport
 }
 
 application {
 	mainClass = 'hexlet.code.demo.AppApplication'
 }
 
-jacoco {
-	toolVersion = '0.8.10'
-}
-
-test {
-	finalizedBy jacocoTestReport
-}
-
-jacocoTestReport {
-	reports {
-		xml.required = true
-		xml.destination file("${buildDir}/reports/jacoco/test/jacocoTestReport.xml")
-	}
-	sourceDirectories.setFrom(files('src/main/java'))
-	classDirectories.setFrom(files('build/classes/java/main'))
-}
+// jacoco конфигурации удалены, так как мы отключаем генерацию отчета
 
 checkstyle {
 	toolVersion = '10.3'
