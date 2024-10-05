@@ -42,5 +42,5 @@ jobs:
           ./cc-test-reporter upload-coverage
 
       - name: Finalize Code Climate reporter
-        if: always()
+        if: success()
         run: ./cc-test-reporter after-build
