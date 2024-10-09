@@ -79,7 +79,7 @@ public class TaskStatusController {
      */
     @PatchMapping("/{id}")
     public ResponseEntity<?> partialUpdateTaskStatus(@PathVariable Long id,
-                                                     @RequestBody TaskStatusUpdateDto taskStatusUpdateDto) {
+                                                     @Valid @RequestBody TaskStatusUpdateDto taskStatusUpdateDto) {
         try {
             TaskStatus updatedTaskStatus = taskStatusService.partialUpdateTaskStatus(id, taskStatusUpdateDto);
             return ResponseEntity.ok(updatedTaskStatus);
@@ -88,6 +88,7 @@ public class TaskStatusController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
+
 
     /**
      * Удаляет статус задачи по его идентификатору.

@@ -81,21 +81,17 @@ public class TaskStatusService {
         TaskStatus existingTaskStatus = taskStatusRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("TaskStatus not found"));
 
-        // Проверка на наличие обновляемых полей
-        if (taskStatusUpdateDto.getName() == null && taskStatusUpdateDto.getSlug() == null) {
-            throw new IllegalArgumentException("At least one field must be provided for update");
-        }
-
-        // Обновление только переданных полей
-        if (taskStatusUpdateDto.getName() != null && !taskStatusUpdateDto.getName().isEmpty()) {
+        // Обновляем поля только если они не пусты
+        if (taskStatusUpdateDto.getName() != null && !taskStatusUpdateDto.getName().isBlank()) {
             existingTaskStatus.setName(taskStatusUpdateDto.getName());
         }
-        if (taskStatusUpdateDto.getSlug() != null && !taskStatusUpdateDto.getSlug().isEmpty()) {
+        if (taskStatusUpdateDto.getSlug() != null && !taskStatusUpdateDto.getSlug().isBlank()) {
             existingTaskStatus.setSlug(taskStatusUpdateDto.getSlug());
         }
 
         return taskStatusRepository.save(existingTaskStatus);
     }
+
 
     /**
      * Удаление статуса задачи по его идентификатору.
