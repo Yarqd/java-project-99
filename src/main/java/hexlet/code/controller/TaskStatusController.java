@@ -75,12 +75,18 @@ public class TaskStatusController {
      *
      * @param id                идентификатор статуса задачи
      * @param taskStatusUpdateDto DTO с полями, которые нужно обновить
-     * @return обновленный статус задачи
+     * @return обновленный статус задачи или сообщение об ошибке
      */
     @PatchMapping("/{id}")
-    public TaskStatus partialUpdateTaskStatus(@PathVariable Long id,
-                                              @RequestBody TaskStatusUpdateDto taskStatusUpdateDto) {
-        return taskStatusService.partialUpdateTaskStatus(id, taskStatusUpdateDto);
+    public ResponseEntity<?> partialUpdateTaskStatus(@PathVariable Long id,
+                                                     @RequestBody TaskStatusUpdateDto taskStatusUpdateDto) {
+        try {
+            TaskStatus updatedTaskStatus = taskStatusService.partialUpdateTaskStatus(id, taskStatusUpdateDto);
+            return ResponseEntity.ok(updatedTaskStatus);
+        } catch (RuntimeException e) {
+            // Логируем ошибку и возвращаем сообщение об ошибке с кодом 400
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
     /**
