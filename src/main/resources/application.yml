@@ -1,6 +1,9 @@
 spring:
+  application:
+    name: app  # Имя приложения
+
   profiles:
-    active: dev  # Установите на 'prod' через переменные окружения
+    active: dev  # Используйте 'prod' для продакшен окружения через переменные окружения
 
 # Конфигурация для профиля "dev" (H2 Database)
 ---
@@ -23,6 +26,8 @@ spring:
       ddl-auto: create
     show-sql: true
     open-in-view: false  # Отключить open-in-view
+  sentry:
+    dsn: ${SENTRY_DSN_DEV}  # Переменная окружения для dev профиля
 
 # Конфигурация для профиля "prod" (PostgreSQL)
 ---
@@ -40,6 +45,8 @@ spring:
       ddl-auto: update
     show-sql: true
     open-in-view: false  # Отключить open-in-view
+  sentry:
+    dsn: ${SENTRY_DSN_PROD}  # Переменная окружения для prod профиля
 
 logging:
   level:

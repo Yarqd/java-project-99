@@ -55,7 +55,7 @@ jacocoTestReport {
 }
 
 application {
-	mainClass = 'hexlet.code.demo.AppApplication'
+	mainClass = 'hexlet.code.AppApplication'
 }
 
 // jacoco конфигурации удалены, так как мы отключаем генерацию отчета
