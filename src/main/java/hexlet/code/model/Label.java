@@ -8,6 +8,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Column;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.FetchType;
+import jakarta.persistence.PrePersist;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
@@ -24,9 +25,9 @@ public class Label {
     private String name;
 
     @Column(nullable = false, updatable = false)
-    private LocalDateTime createdAt = LocalDateTime.now();
+    private LocalDateTime createdAt;
 
-    @ManyToMany(mappedBy = "labels", fetch = FetchType.EAGER) // Жадная загрузка
+    @ManyToMany(mappedBy = "labels", fetch = FetchType.EAGER)
     private Set<Task> tasks = new HashSet<>();
 
     // Конструктор с параметром
@@ -36,6 +37,14 @@ public class Label {
 
     // Пустой конструктор
     public Label() {
+    }
+
+    /**
+     * Устанавливает значение createdAt перед сохранением сущности.
+     */
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = LocalDateTime.now();
     }
 
     /**
