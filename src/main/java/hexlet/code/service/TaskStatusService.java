@@ -68,21 +68,29 @@ public class TaskStatusService {
 
     /**
      * Частичное обновление статуса задачи.
+     * Обновляет только те поля, которые переданы в DTO.
      *
      * @param id                идентификатор существующего статуса задачи
      * @param taskStatusUpdateDto объект с обновляемыми данными статуса задачи
      * @return обновленный статус задачи
      * @throws RuntimeException если статус задачи не найден
+     * @throws IllegalArgumentException если DTO не содержит полей для обновления
      */
     @Transactional
     public TaskStatus partialUpdateTaskStatus(Long id, TaskStatusUpdateDto taskStatusUpdateDto) {
         TaskStatus existingTaskStatus = taskStatusRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("TaskStatus not found"));
 
-        if (taskStatusUpdateDto.getName() != null) {
+        // Проверка на наличие обновляемых полей
+        if (taskStatusUpdateDto.getName() == null && taskStatusUpdateDto.getSlug() == null) {
+            throw new IllegalArgumentException("At least one field must be provided for update");
+        }
+
+        // Обновление только переданных полей
+        if (taskStatusUpdateDto.getName() != null && !taskStatusUpdateDto.getName().isEmpty()) {
             existingTaskStatus.setName(taskStatusUpdateDto.getName());
         }
-        if (taskStatusUpdateDto.getSlug() != null) {
+        if (taskStatusUpdateDto.getSlug() != null && !taskStatusUpdateDto.getSlug().isEmpty()) {
             existingTaskStatus.setSlug(taskStatusUpdateDto.getSlug());
         }
 
