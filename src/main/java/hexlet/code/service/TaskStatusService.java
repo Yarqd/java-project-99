@@ -1,6 +1,7 @@
 package hexlet.code.service;
 
 import hexlet.code.model.TaskStatus;
+import hexlet.code.dto.TaskStatusUpdateDto;
 import hexlet.code.repository.TaskStatusRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -62,6 +63,30 @@ public class TaskStatusService {
                 .orElseThrow(() -> new RuntimeException("TaskStatus not found"));
         existingTaskStatus.setName(taskStatus.getName());
         existingTaskStatus.setSlug(taskStatus.getSlug());
+        return taskStatusRepository.save(existingTaskStatus);
+    }
+
+    /**
+     * Частичное обновление статуса задачи.
+     *
+     * @param id                идентификатор существующего статуса задачи
+     * @param taskStatusUpdateDto объект с обновляемыми данными статуса задачи
+     * @return обновленный статус задачи
+     * @throws RuntimeException если статус задачи не найден
+     */
+    @Transactional
+    public TaskStatus partialUpdateTaskStatus(Long id, TaskStatusUpdateDto taskStatusUpdateDto) {
+        TaskStatus existingTaskStatus = taskStatusRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("TaskStatus not found"));
+
+        // Обновляем только те поля, которые были переданы
+        if (taskStatusUpdateDto.getName() != null) {
+            existingTaskStatus.setName(taskStatusUpdateDto.getName());
+        }
+        if (taskStatusUpdateDto.getSlug() != null) {
+            existingTaskStatus.setSlug(taskStatusUpdateDto.getSlug());
+        }
+
         return taskStatusRepository.save(existingTaskStatus);
     }
 
