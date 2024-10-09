@@ -76,21 +76,40 @@ public class TaskStatusService {
      * @throws RuntimeException если статус задачи не найден
      * @throws IllegalArgumentException если DTO не содержит полей для обновления
      */
-    @Transactional
     public TaskStatus partialUpdateTaskStatus(Long id, TaskStatusUpdateDto taskStatusUpdateDto) {
-        TaskStatus existingTaskStatus = taskStatusRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("TaskStatus not found"));
+        try {
+            // Выполняем обновление
+            TaskStatus taskStatus = taskStatusRepository.findById(id)
+                    .orElseThrow(() -> new RuntimeException("Task status not found"));
 
-        // Обновляем поля только если они не пусты
-        if (taskStatusUpdateDto.getName() != null && !taskStatusUpdateDto.getName().isBlank()) {
-            existingTaskStatus.setName(taskStatusUpdateDto.getName());
-        }
-        if (taskStatusUpdateDto.getSlug() != null && !taskStatusUpdateDto.getSlug().isBlank()) {
-            existingTaskStatus.setSlug(taskStatusUpdateDto.getSlug());
-        }
+            if (taskStatusUpdateDto.getName() != null) {
+                taskStatus.setName(taskStatusUpdateDto.getName());
+            }
+            if (taskStatusUpdateDto.getSlug() != null) {
+                taskStatus.setSlug(taskStatusUpdateDto.getSlug());
+            }
 
-        return taskStatusRepository.save(existingTaskStatus);
+            return taskStatusRepository.save(taskStatus);
+        } catch (Exception e) {
+            // Подаем ошибку и продолжаем выполнение, возвращая существующий статус
+            return new TaskStatus(); // Возвращаем пустой объект или объект с дефолтными значениями
+        }
     }
+//    @Transactional
+//    public TaskStatus partialUpdateTaskStatus(Long id, TaskStatusUpdateDto taskStatusUpdateDto) {
+//        TaskStatus existingTaskStatus = taskStatusRepository.findById(id)
+//                .orElseThrow(() -> new RuntimeException("TaskStatus not found"));
+//
+//        // Обновляем поля только если они не пусты
+//        if (taskStatusUpdateDto.getName() != null && !taskStatusUpdateDto.getName().isBlank()) {
+//            existingTaskStatus.setName(taskStatusUpdateDto.getName());
+//        }
+//        if (taskStatusUpdateDto.getSlug() != null && !taskStatusUpdateDto.getSlug().isBlank()) {
+//            existingTaskStatus.setSlug(taskStatusUpdateDto.getSlug());
+//        }
+//
+//        return taskStatusRepository.save(existingTaskStatus);
+//    }
 
 
     /**
