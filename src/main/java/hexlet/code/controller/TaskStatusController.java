@@ -78,7 +78,8 @@ public class TaskStatusController {
      * @return обновленный статус задачи
      */
     @PatchMapping("/{id}")
-    public TaskStatus partialUpdateTaskStatus(@PathVariable Long id, @RequestBody TaskStatusUpdateDto taskStatusUpdateDto) {
+    public TaskStatus partialUpdateTaskStatus(@PathVariable Long id,
+                                              @RequestBody TaskStatusUpdateDto taskStatusUpdateDto) {
         return taskStatusService.partialUpdateTaskStatus(id, taskStatusUpdateDto);
     }
 
