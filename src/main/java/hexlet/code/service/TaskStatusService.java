@@ -22,6 +22,7 @@ public class TaskStatusService {
      */
     @Transactional
     public TaskStatus createTaskStatus(TaskStatus taskStatus) {
+        validateTaskStatus(taskStatus);
         return taskStatusRepository.save(taskStatus);
     }
 
@@ -49,13 +50,14 @@ public class TaskStatusService {
     /**
      * Обновление статуса задачи.
      *
-     * @param id идентификатор существующего статуса задачи
+     * @param id         идентификатор существующего статуса задачи
      * @param taskStatus объект с обновленными данными статуса задачи
      * @return обновленный статус задачи
      * @throws RuntimeException если статус задачи не найден
      */
     @Transactional
     public TaskStatus updateTaskStatus(Long id, TaskStatus taskStatus) {
+        validateTaskStatus(taskStatus);
         TaskStatus existingTaskStatus = taskStatusRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("TaskStatus not found"));
         existingTaskStatus.setName(taskStatus.getName());
@@ -75,5 +77,20 @@ public class TaskStatusService {
             throw new RuntimeException("TaskStatus not found");
         }
         taskStatusRepository.deleteById(id);
+    }
+
+    /**
+     * Валидация объекта TaskStatus.
+     *
+     * @param taskStatus объект статуса задачи для проверки
+     * @throws IllegalArgumentException если поля name или slug пустые
+     */
+    private void validateTaskStatus(TaskStatus taskStatus) {
+        if (taskStatus.getName() == null || taskStatus.getName().isEmpty()) {
+            throw new IllegalArgumentException("TaskStatus name must not be null or empty");
+        }
+        if (taskStatus.getSlug() == null || taskStatus.getSlug().isEmpty()) {
+            throw new IllegalArgumentException("TaskStatus slug must not be null or empty");
+        }
     }
 }
