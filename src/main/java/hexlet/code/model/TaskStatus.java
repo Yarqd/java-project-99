@@ -5,6 +5,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Column;
+import jakarta.persistence.PrePersist;
 import java.time.LocalDateTime;
 
 @Entity
@@ -25,13 +26,20 @@ public class TaskStatus {
 
     // Конструктор по умолчанию
     public TaskStatus() {
-        this.createdAt = LocalDateTime.now();
+        // оставляем пустым, так как createdAt будет заполняться через @PrePersist
     }
 
     // Конструктор с параметрами
     public TaskStatus(String name, String slug) {
         this.name = name;
         this.slug = slug;
+    }
+
+    /**
+     * Устанавливает дату создания перед сохранением сущности.
+     */
+    @PrePersist
+    protected void onCreate() {
         this.createdAt = LocalDateTime.now();
     }
 
