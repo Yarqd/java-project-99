@@ -28,7 +28,7 @@ public class AppApplication implements CommandLineRunner {
     }
 
     @Override
-    public void run(String... args) throws Exception {
+    public final void run(String... args) throws Exception {
         if (userService.getAllUsers().isEmpty()) {
             UserCreateDTO adminUser = new UserCreateDTO();
             adminUser.setEmail("hexlet@example.com");
