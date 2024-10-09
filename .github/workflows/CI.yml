@@ -1,46 +1,28 @@
-name: CI
+name: Java CI
 
 on:
-  push:
-    branches:
-      - main
-  pull_request:
-    branches:
-      - main
+  - push
+  - pull_request
 
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
+      - uses: actions/checkout@v3
       - name: Set up JDK 21
         uses: actions/setup-java@v3
         with:
-          distribution: 'temurin'
           java-version: '21'
-
+          distribution: 'temurin'
       - name: Build with Gradle
-        run: ./gradlew build
-
-      - name: Run tests and generate coverage
-        run: ./gradlew test jacocoTestReport
-
-      - name: Download and configure Code Climate reporter
-        run: |
-          curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
-          chmod +x ./cc-test-reporter
-          ./cc-test-reporter before-build
-
-      - name: Format and upload coverage to Code Climate
+        uses: gradle/gradle-build-action@v2
+        with:
+          arguments: build
+      - name: Publish code coverage
+        uses: paambaati/codeclimate-action@v3.2.0
         env:
-          CC_TEST_REPORTER_ID: ${{ secrets.CC_TEST_REPORTER_ID }}
-        run: |
-          ./cc-test-reporter format-coverage build/reports/jacoco/test/jacocoTestReport.xml --input-type jacoco --prefix "/home/runner/work/java-project-99/java-project-99/src/main/java"
-          ./cc-test-reporter upload-coverage --debug
-
-      - name: Finalize Code Climate reporter
-        if: always()
-        run: ./cc-test-reporter after-build --debug
+          CC_TEST_REPORTER_ID: ${{secrets.CC_TEST_REPORTER_ID}}
+          JACOCO_SOURCE_PATH: src/main/java
+        with:
+          coverageCommand: ./gradlew jacocoTestReport
+          coverageLocations: ${{github.workspace}}/build/reports/jacoco/test/jacocoTestReport.xml:jacoco
