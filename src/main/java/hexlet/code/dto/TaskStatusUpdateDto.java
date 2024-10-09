@@ -36,4 +36,12 @@ public final class TaskStatusUpdateDto {
     public void setSlug(String slug) {
         this.slug = slug;
     }
+
+    /**
+     * Проверяет, содержит ли DTO данные для обновления.
+     * @return true, если есть хотя бы одно поле для обновления, иначе false
+     */
+    public boolean hasUpdates() {
+        return name != null || slug != null;
+    }
 }

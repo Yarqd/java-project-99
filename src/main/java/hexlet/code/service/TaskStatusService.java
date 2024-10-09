@@ -15,47 +15,21 @@ public class TaskStatusService {
     @Autowired
     private TaskStatusRepository taskStatusRepository;
 
-    /**
-     * Создание нового статуса задачи.
-     *
-     * @param taskStatus объект статуса задачи для сохранения
-     * @return созданный статус задачи
-     */
     @Transactional
     public TaskStatus createTaskStatus(TaskStatus taskStatus) {
         validateTaskStatus(taskStatus);
         return taskStatusRepository.save(taskStatus);
     }
 
-    /**
-     * Получение всех статусов задач.
-     *
-     * @return список всех статусов задач
-     */
     public List<TaskStatus> getAllTaskStatuses() {
         return taskStatusRepository.findAll();
     }
 
-    /**
-     * Получение статуса задачи по его идентификатору.
-     *
-     * @param id идентификатор статуса задачи
-     * @return объект статуса задачи
-     * @throws RuntimeException если статус задачи не найден
-     */
     public TaskStatus getTaskStatusById(Long id) {
         return taskStatusRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("TaskStatus not found"));
     }
 
-    /**
-     * Обновление статуса задачи.
-     *
-     * @param id         идентификатор существующего статуса задачи
-     * @param taskStatus объект с обновленными данными статуса задачи
-     * @return обновленный статус задачи
-     * @throws RuntimeException если статус задачи не найден
-     */
     @Transactional
     public TaskStatus updateTaskStatus(Long id, TaskStatus taskStatus) {
         validateTaskStatus(taskStatus);
@@ -66,20 +40,11 @@ public class TaskStatusService {
         return taskStatusRepository.save(existingTaskStatus);
     }
 
-    /**
-     * Частичное обновление статуса задачи.
-     *
-     * @param id                идентификатор существующего статуса задачи
-     * @param taskStatusUpdateDto объект с обновляемыми данными статуса задачи
-     * @return обновленный статус задачи
-     * @throws RuntimeException если статус задачи не найден
-     */
     @Transactional
     public TaskStatus partialUpdateTaskStatus(Long id, TaskStatusUpdateDto taskStatusUpdateDto) {
         TaskStatus existingTaskStatus = taskStatusRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("TaskStatus not found"));
 
-        // Обновляем только те поля, которые были переданы
         if (taskStatusUpdateDto.getName() != null) {
             existingTaskStatus.setName(taskStatusUpdateDto.getName());
         }
@@ -90,12 +55,6 @@ public class TaskStatusService {
         return taskStatusRepository.save(existingTaskStatus);
     }
 
-    /**
-     * Удаление статуса задачи по его идентификатору.
-     *
-     * @param id идентификатор статуса задачи
-     * @throws RuntimeException если статус задачи не найден
-     */
     @Transactional
     public void deleteTaskStatus(Long id) {
         if (!taskStatusRepository.existsById(id)) {
@@ -104,12 +63,6 @@ public class TaskStatusService {
         taskStatusRepository.deleteById(id);
     }
 
-    /**
-     * Валидация объекта TaskStatus.
-     *
-     * @param taskStatus объект статуса задачи для проверки
-     * @throws IllegalArgumentException если поля name или slug пустые
-     */
     private void validateTaskStatus(TaskStatus taskStatus) {
         if (taskStatus.getName() == null || taskStatus.getName().isEmpty()) {
             throw new IllegalArgumentException("TaskStatus name must not be null or empty");
