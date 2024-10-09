@@ -1,7 +1,5 @@
 package hexlet.code.dto;
 
-import jakarta.validation.constraints.NotBlank;
-
 public final class TaskStatusUpdateDto {
 
 //    @NotBlank(message = "Name must not be blank")
