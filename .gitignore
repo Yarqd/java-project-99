@@ -11,4 +11,5 @@ jte-classes
 bin
 .classpath
 .idea
-node_modules
+node_modules/
+
