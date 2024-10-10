@@ -80,32 +80,19 @@ public class TaskStatusController {
     @PatchMapping("/{id}")
     public ResponseEntity<?> partialUpdateTaskStatus(@PathVariable Long id,
                                                      @Valid @RequestBody TaskStatusUpdateDto taskStatusUpdateDto) {
-        // Принудительно возвращаем 200, даже если не переданы данные для обновления
+        // Если в DTO нет данных для обновления, возвращаем 400 Bad Request
         if (!taskStatusUpdateDto.hasUpdates()) {
-            return ResponseEntity.ok().body("No fields to update, but returning 200");
+            return ResponseEntity.badRequest().body("No fields to update");
         }
 
         try {
             TaskStatus updatedTaskStatus = taskStatusService.partialUpdateTaskStatus(id, taskStatusUpdateDto);
             return ResponseEntity.ok(updatedTaskStatus);
         } catch (RuntimeException e) {
-            // Ловим все исключения и возвращаем 200, даже если была ошибка
-            return ResponseEntity.ok().body("Error occurred, but returning 200");
+            // Ловим исключение и возвращаем сообщение об ошибке с кодом 400
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
-
-//    @PatchMapping("/{id}")
-//    public ResponseEntity<?> partialUpdateTaskStatus(@PathVariable Long id,
-//                                                     @Valid @RequestBody TaskStatusUpdateDto taskStatusUpdateDto) {
-//        try {
-//            TaskStatus updatedTaskStatus = taskStatusService.partialUpdateTaskStatus(id, taskStatusUpdateDto);
-//            return ResponseEntity.ok(updatedTaskStatus);
-//        } catch (RuntimeException e) {
-//            // Логируем ошибку и возвращаем сообщение об ошибке с кодом 400
-//            return ResponseEntity.badRequest().body(e.getMessage());
-//        }
-//    }
-
 
     /**
      * Удаляет статус задачи по его идентификатору.
