@@ -21,6 +21,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.hamcrest.Matchers.hasSize;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import java.util.List;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -80,14 +82,16 @@ public class TaskControllerTestTwo {
 
     @Test
     public void testFilterByStatus() throws Exception {
-        // Проверка запроса фильтрации по статусу
-        System.out.println("Executing filter by status: in_progress");
-
         mockMvc.perform(get("/api/tasks")
                         .param("status", "in_progress")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(1)));
+
+        // Проверяем, что задача с нужным статусом существует в базе
+        List<Task> tasks = taskRepository.findAll();
+        assertEquals(1, tasks.size());
+        assertEquals("in_progress", tasks.get(0).getTaskStatus().getSlug());
     }
 
     @Test

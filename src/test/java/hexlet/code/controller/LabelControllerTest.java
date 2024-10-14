@@ -15,6 +15,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -87,6 +88,10 @@ public class LabelControllerTest {
                         .content(objectMapper.writeValueAsString(newLabel)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.name").value("Feature"));
+
+        // Проверка наличия новой метки в базе данных
+        Label savedLabel = labelRepository.findByName("Feature").orElseThrow();
+        assertEquals("Feature", savedLabel.getName());
     }
 
     @Test
@@ -98,6 +103,10 @@ public class LabelControllerTest {
                         .content(objectMapper.writeValueAsString(updatedLabel)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.name").value("Updated Bug"));
+
+        // Проверка обновленного значения в базе данных
+        Label savedLabel = labelRepository.findById(label.getId()).orElseThrow();
+        assertEquals("Updated Bug", savedLabel.getName());
     }
 
     @Test

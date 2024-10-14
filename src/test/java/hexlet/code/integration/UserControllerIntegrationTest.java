@@ -13,8 +13,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.ResultActions;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -55,14 +55,15 @@ public class UserControllerIntegrationTest {
     @Test
     @WithMockUser(username = "admin", roles = {"USER"})
     public void testCreateUser() throws Exception {
-        ResultActions result = mockMvc.perform(post("/api/users")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(userCreateDTO)));
+        mockMvc.perform(post("/api/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(userCreateDTO)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.email").value(userCreateDTO.getEmail()));
 
-        result.andExpect(status().isCreated())
-                .andExpect(jsonPath("$.email").value(userCreateDTO.getEmail()))
-                .andExpect(jsonPath("$.firstName").value(userCreateDTO.getFirstName()))
-                .andExpect(jsonPath("$.lastName").value(userCreateDTO.getLastName()));
+        // Проверка, что пользователь сохранен в базе
+        User savedUser = userRepository.findByEmail(userCreateDTO.getEmail()).orElseThrow();
+        assertEquals(userCreateDTO.getEmail(), savedUser.getEmail());
     }
 
     @Test

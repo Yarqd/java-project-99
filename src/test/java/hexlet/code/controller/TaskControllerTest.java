@@ -12,6 +12,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -35,17 +36,23 @@ public class TaskControllerTest {
         TaskStatus status = new TaskStatus();
         status.setName("In Progress");
         status.setSlug("in_progress");
-        taskStatusRepository.save(status);  // Сохраняем статус в репозиторий
+        taskStatusRepository.save(status);
 
         // Создаем задачу с указанным статусом
         Task task = new Task();
         task.setName("Test Task");
-        task.setTaskStatus(status);  // Устанавливаем реальный статус
-        taskRepository.save(task);  // Сохраняем задачу
+        task.setTaskStatus(status);
+        taskRepository.save(task);
 
         // Выполняем запрос на получение задачи по ID
         mockMvc.perform(get("/api/tasks/" + task.getId())
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
+
+        // Проверяем, что задача действительно существует в базе
+        Task savedTask = taskRepository.findById(task.getId()).orElseThrow();
+        assertEquals("Test Task", savedTask.getName());
+        assertEquals("In Progress", savedTask.getTaskStatus().getName());
     }
+
 }

@@ -11,6 +11,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -30,12 +31,8 @@ public class TaskStatusIntegrationTest {
 
     private TaskStatus taskStatus;
 
-    /**
-     * Метод, который выполняется перед каждым тестом для очистки репозитория
-     * и инициализации объекта TaskStatus для использования в тестах.
-     */
     @BeforeEach
-    void setUp() {
+    final void setUp() {
         taskStatusRepository.deleteAll();
         taskStatus = new TaskStatus();
         taskStatus.setName("New");
@@ -49,5 +46,8 @@ public class TaskStatusIntegrationTest {
                         .content(objectMapper.writeValueAsString(taskStatus)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.name").value(taskStatus.getName()));
+
+        // Проверка, что статус был сохранен в базе
+        assertTrue(taskStatusRepository.existsBySlug("new"));
     }
 }

@@ -10,4 +10,6 @@ public interface LabelRepository extends JpaRepository<Label, Long> {
 
     @EntityGraph(attributePaths = "tasks")  // Подгружаем связанные задачи
     Optional<Label> findById(Long id);
+
+    Optional<Label> findByName(String name);
 }
