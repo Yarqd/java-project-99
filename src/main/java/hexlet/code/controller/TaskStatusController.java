@@ -85,12 +85,6 @@ public class TaskStatusController {
         System.out.println("DTO Name: " + taskStatusUpdateDto.getName());
         System.out.println("DTO Slug: " + taskStatusUpdateDto.getSlug());
 
-        // Если в DTO нет данных для обновления, возвращаем 400 Bad Request
-        if (!taskStatusUpdateDto.hasUpdates()) {
-            System.out.println("No fields to update. Returning 400 Bad Request.");
-            return ResponseEntity.badRequest().body("No fields to update");
-        }
-
         try {
             TaskStatus updatedTaskStatus = taskStatusService.partialUpdateTaskStatus(id, taskStatusUpdateDto);
 
