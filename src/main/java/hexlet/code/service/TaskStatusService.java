@@ -77,7 +77,6 @@ public class TaskStatusService {
      * @throws IllegalArgumentException если DTO не содержит полей для обновления
      */
     public TaskStatus partialUpdateTaskStatus(Long id, TaskStatusUpdateDto taskStatusUpdateDto) {
-        // Находим статус задачи по id, если не найдено - выбрасываем исключение
         TaskStatus taskStatus = taskStatusRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Task status not found"));
 
@@ -86,21 +85,13 @@ public class TaskStatusService {
         System.out.println("Полученное имя: " + taskStatusUpdateDto.getName());
         System.out.println("Полученный слаг: " + taskStatusUpdateDto.getSlug());
 
-        // Обновляем имя, если оно было передано
-        if (taskStatusUpdateDto.getName() != null && !taskStatusUpdateDto.getName().isEmpty()) {
-            System.out.println("Обновляем имя на: " + taskStatusUpdateDto.getName());
-            taskStatus.setName(taskStatusUpdateDto.getName());
-        } else {
-            System.out.println("Имя не передано или пустое, оставляем текущее: " + taskStatus.getName());
-        }
+        // Обновляем имя, даже если оно передано как null
+        taskStatus.setName(taskStatusUpdateDto.getName());
+        System.out.println("Обновляем имя на: " + taskStatusUpdateDto.getName());
 
-        // Обновляем слаг, если он был передан
-        if (taskStatusUpdateDto.getSlug() != null && !taskStatusUpdateDto.getSlug().isEmpty()) {
-            System.out.println("Обновляем слаг на: " + taskStatusUpdateDto.getSlug());
-            taskStatus.setSlug(taskStatusUpdateDto.getSlug());
-        } else {
-            System.out.println("Слаг не передан или пустой, оставляем текущий: " + taskStatus.getSlug());
-        }
+        // Обновляем слаг, даже если он передан как null
+        taskStatus.setSlug(taskStatusUpdateDto.getSlug());
+        System.out.println("Обновляем слаг на: " + taskStatusUpdateDto.getSlug());
 
         // Сохраняем обновленный статус задачи
         System.out.println("Сохраняем обновленный статус задачи.");
