@@ -77,21 +77,24 @@ public class TaskStatusService {
      * @throws IllegalArgumentException если DTO не содержит полей для обновления
      */
     public TaskStatus partialUpdateTaskStatus(Long id, TaskStatusUpdateDto taskStatusUpdateDto) {
+        // Ищем статус задачи по id, если не найдено - выбрасываем исключение
         TaskStatus taskStatus = taskStatusRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Task status not found"));
 
-        // Логируем полученные данные
+        // Логируем полученные данные из DTO
         System.out.println("Данные для обновления:");
         System.out.println("Полученное имя: " + taskStatusUpdateDto.getName());
         System.out.println("Полученный слаг: " + taskStatusUpdateDto.getSlug());
 
-        // Обновляем только имя, если оно передано
+        // Обновляем имя, если оно было передано
         if (taskStatusUpdateDto.getName() != null) {
             System.out.println("Обновляем имя на: " + taskStatusUpdateDto.getName());
             taskStatus.setName(taskStatusUpdateDto.getName());
+        } else {
+            System.out.println("Имя не передано, оставляем текущее: " + taskStatus.getName());
         }
 
-        // Обновляем слаг только если он был передан
+        // Обновляем слаг, если он был передан
         if (taskStatusUpdateDto.getSlug() != null) {
             System.out.println("Обновляем слаг на: " + taskStatusUpdateDto.getSlug());
             taskStatus.setSlug(taskStatusUpdateDto.getSlug());
@@ -99,6 +102,8 @@ public class TaskStatusService {
             System.out.println("Слаг не передан, оставляем текущий: " + taskStatus.getSlug());
         }
 
+        // Сохраняем обновленный статус задачи
+        System.out.println("Сохраняем обновленный статус задачи.");
         return taskStatusRepository.save(taskStatus);
     }
 
