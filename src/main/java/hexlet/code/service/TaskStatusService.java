@@ -77,24 +77,22 @@ public class TaskStatusService {
      * @throws IllegalArgumentException если DTO не содержит полей для обновления
      */
     public TaskStatus partialUpdateTaskStatus(Long id, TaskStatusUpdateDto taskStatusUpdateDto) {
-        try {
-            // Выполняем обновление
-            TaskStatus taskStatus = taskStatusRepository.findById(id)
-                    .orElseThrow(() -> new RuntimeException("Task status not found"));
+        TaskStatus taskStatus = taskStatusRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Task status not found"));
 
-            if (taskStatusUpdateDto.getName() != null) {
-                taskStatus.setName(taskStatusUpdateDto.getName());
-            }
-            if (taskStatusUpdateDto.getSlug() != null) {
-                taskStatus.setSlug(taskStatusUpdateDto.getSlug());
-            }
-
-            return taskStatusRepository.save(taskStatus);
-        } catch (Exception e) {
-            // Подаем ошибку и продолжаем выполнение, возвращая существующий статус
-            return new TaskStatus(); // Возвращаем пустой объект или объект с дефолтными значениями
+        // Обновляем только имя, если оно передано
+        if (taskStatusUpdateDto.getName() != null) {
+            taskStatus.setName(taskStatusUpdateDto.getName());
         }
+
+        // Обновляем слаг только если он был передан
+        if (taskStatusUpdateDto.getSlug() != null) {
+            taskStatus.setSlug(taskStatusUpdateDto.getSlug());
+        }
+
+        return taskStatusRepository.save(taskStatus);
     }
+
 //    @Transactional
 //    public TaskStatus partialUpdateTaskStatus(Long id, TaskStatusUpdateDto taskStatusUpdateDto) {
 //        TaskStatus existingTaskStatus = taskStatusRepository.findById(id)
