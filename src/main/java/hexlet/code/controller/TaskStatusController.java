@@ -79,17 +79,11 @@ public class TaskStatusController {
      */
     @PatchMapping("/{id}")
     public ResponseEntity<?> partialUpdateTaskStatus(@PathVariable Long id,
-                                                     @Valid @RequestBody TaskStatusUpdateDto taskStatusUpdateDto) {
+                                                     @RequestBody TaskStatusUpdateDto taskStatusUpdateDto) {
         // Логируем входные данные
         System.out.println("Received request to update TaskStatus with id: " + id);
         System.out.println("DTO Name: " + taskStatusUpdateDto.getName());
         System.out.println("DTO Slug: " + taskStatusUpdateDto.getSlug());
-
-        // Если в DTO нет данных для обновления, возвращаем 400 Bad Request
-        if (!taskStatusUpdateDto.hasUpdates()) {
-            System.out.println("No fields to update. Returning 400 Bad Request.");
-            return ResponseEntity.badRequest().body("No fields to update");
-        }
 
         try {
             TaskStatus updatedTaskStatus = taskStatusService.partialUpdateTaskStatus(id, taskStatusUpdateDto);
