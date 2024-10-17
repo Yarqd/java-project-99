@@ -80,35 +80,27 @@ public class TaskStatusService {
         TaskStatus taskStatus = taskStatusRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Task status not found"));
 
+        // Логируем полученные данные
+        System.out.println("Данные для обновления:");
+        System.out.println("Полученное имя: " + taskStatusUpdateDto.getName());
+        System.out.println("Полученный слаг: " + taskStatusUpdateDto.getSlug());
+
         // Обновляем только имя, если оно передано
         if (taskStatusUpdateDto.getName() != null) {
+            System.out.println("Обновляем имя на: " + taskStatusUpdateDto.getName());
             taskStatus.setName(taskStatusUpdateDto.getName());
         }
 
         // Обновляем слаг только если он был передан
         if (taskStatusUpdateDto.getSlug() != null) {
+            System.out.println("Обновляем слаг на: " + taskStatusUpdateDto.getSlug());
             taskStatus.setSlug(taskStatusUpdateDto.getSlug());
+        } else {
+            System.out.println("Слаг не передан, оставляем текущий: " + taskStatus.getSlug());
         }
 
         return taskStatusRepository.save(taskStatus);
     }
-
-//    @Transactional
-//    public TaskStatus partialUpdateTaskStatus(Long id, TaskStatusUpdateDto taskStatusUpdateDto) {
-//        TaskStatus existingTaskStatus = taskStatusRepository.findById(id)
-//                .orElseThrow(() -> new RuntimeException("TaskStatus not found"));
-//
-//        // Обновляем поля только если они не пусты
-//        if (taskStatusUpdateDto.getName() != null && !taskStatusUpdateDto.getName().isBlank()) {
-//            existingTaskStatus.setName(taskStatusUpdateDto.getName());
-//        }
-//        if (taskStatusUpdateDto.getSlug() != null && !taskStatusUpdateDto.getSlug().isBlank()) {
-//            existingTaskStatus.setSlug(taskStatusUpdateDto.getSlug());
-//        }
-//
-//        return taskStatusRepository.save(existingTaskStatus);
-//    }
-
 
     /**
      * Удаление статуса задачи по его идентификатору.
