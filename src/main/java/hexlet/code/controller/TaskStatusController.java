@@ -3,17 +3,11 @@ package hexlet.code.controller;
 import hexlet.code.dto.TaskStatusUpdateDto;
 import hexlet.code.model.TaskStatus;
 import hexlet.code.service.TaskStatusService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
 import java.util.List;
@@ -21,6 +15,8 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/task_statuses")
 public class TaskStatusController {
+
+    private static final Logger logger = LoggerFactory.getLogger(TaskStatusController.class);
 
     @Autowired
     private TaskStatusService taskStatusService;
@@ -32,6 +28,7 @@ public class TaskStatusController {
      */
     @GetMapping
     public List<TaskStatus> getAllTaskStatuses() {
+        logger.info("Fetching all task statuses.");
         return taskStatusService.getAllTaskStatuses();
     }
 
@@ -43,6 +40,7 @@ public class TaskStatusController {
      */
     @GetMapping("/{id}")
     public TaskStatus getTaskStatusById(@PathVariable Long id) {
+        logger.info("Fetching task status with id: {}", id);
         return taskStatusService.getTaskStatusById(id);
     }
 
@@ -54,7 +52,9 @@ public class TaskStatusController {
      */
     @PostMapping
     public ResponseEntity<TaskStatus> createTaskStatus(@Valid @RequestBody TaskStatus taskStatus) {
+        logger.info("Creating new task status: {}", taskStatus);
         TaskStatus createdTaskStatus = taskStatusService.createTaskStatus(taskStatus);
+        logger.info("Task status created successfully: {}", createdTaskStatus);
         return ResponseEntity.status(201).body(createdTaskStatus);
     }
 
@@ -67,7 +67,10 @@ public class TaskStatusController {
      */
     @PutMapping("/{id}")
     public TaskStatus updateTaskStatus(@PathVariable Long id, @Valid @RequestBody TaskStatus taskStatus) {
-        return taskStatusService.updateTaskStatus(id, taskStatus);
+        logger.info("Updating task status with id: {}, data: {}", id, taskStatus);
+        TaskStatus updatedTaskStatus = taskStatusService.updateTaskStatus(id, taskStatus);
+        logger.info("Task status updated successfully: {}", updatedTaskStatus);
+        return updatedTaskStatus;
     }
 
     /**
@@ -80,24 +83,17 @@ public class TaskStatusController {
     @PatchMapping("/{id}")
     public ResponseEntity<?> partialUpdateTaskStatus(@PathVariable Long id,
                                                      @RequestBody TaskStatusUpdateDto taskStatusUpdateDto) {
-        // Логируем входные данные
-        System.out.println("Received request to update TaskStatus with id: " + id);
-        System.out.println("DTO Name: " + taskStatusUpdateDto.getName());
-        System.out.println("DTO Slug: " + taskStatusUpdateDto.getSlug());
+        logger.info("Received request to partially update TaskStatus with id: {}", id);
+        logger.info("DTO Name: {}, DTO Slug: {}", taskStatusUpdateDto.getName(), taskStatusUpdateDto.getSlug());
 
         try {
-            // В любом случае пытаемся обновить статус, даже если данные пусты
             TaskStatus updatedTaskStatus = taskStatusService.partialUpdateTaskStatus(id, taskStatusUpdateDto);
-
-            // Логируем обновлённый статус задачи
-            System.out.println("TaskStatus updated successfully. New values: ");
-            System.out.println("Name: " + updatedTaskStatus.getName());
-            System.out.println("Slug: " + updatedTaskStatus.getSlug());
+            logger.info("TaskStatus updated successfully. New values: Name: {}, Slug: {}",
+                    updatedTaskStatus.getName(), updatedTaskStatus.getSlug());
 
             return ResponseEntity.ok(updatedTaskStatus);
         } catch (RuntimeException e) {
-            // Ловим исключение и возвращаем сообщение об ошибке с кодом 400
-            System.out.println("Error during update: " + e.getMessage());
+            logger.error("Error during update: {}", e.getMessage());
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
@@ -110,7 +106,9 @@ public class TaskStatusController {
      */
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteTaskStatus(@PathVariable Long id) {
+        logger.info("Deleting task status with id: {}", id);
         taskStatusService.deleteTaskStatus(id);
+        logger.info("Task status with id: {} deleted successfully.", id);
         return ResponseEntity.noContent().build();
     }
 }
