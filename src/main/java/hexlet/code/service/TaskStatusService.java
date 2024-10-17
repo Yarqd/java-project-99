@@ -90,16 +90,12 @@ public class TaskStatusService {
         if (taskStatusUpdateDto.getName() != null) {
             System.out.println("Обновляем имя на: " + taskStatusUpdateDto.getName());
             taskStatus.setName(taskStatusUpdateDto.getName());
-        } else {
-            System.out.println("Имя не передано, оставляем текущее: " + taskStatus.getName());
         }
 
         // Обновляем слаг, если он был передан
         if (taskStatusUpdateDto.getSlug() != null) {
             System.out.println("Обновляем слаг на: " + taskStatusUpdateDto.getSlug());
             taskStatus.setSlug(taskStatusUpdateDto.getSlug());
-        } else {
-            System.out.println("Слаг не передан, оставляем текущий: " + taskStatus.getSlug());
         }
 
         // Сохраняем обновленный статус задачи

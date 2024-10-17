@@ -79,13 +79,14 @@ public class TaskStatusController {
      */
     @PatchMapping("/{id}")
     public ResponseEntity<?> partialUpdateTaskStatus(@PathVariable Long id,
-                                                     @Valid @RequestBody TaskStatusUpdateDto taskStatusUpdateDto) {
+                                                     @RequestBody TaskStatusUpdateDto taskStatusUpdateDto) {
         // Логируем входные данные
         System.out.println("Received request to update TaskStatus with id: " + id);
         System.out.println("DTO Name: " + taskStatusUpdateDto.getName());
         System.out.println("DTO Slug: " + taskStatusUpdateDto.getSlug());
 
         try {
+            // В любом случае пытаемся обновить статус, даже если данные пусты
             TaskStatus updatedTaskStatus = taskStatusService.partialUpdateTaskStatus(id, taskStatusUpdateDto);
 
             // Логируем обновлённый статус задачи
