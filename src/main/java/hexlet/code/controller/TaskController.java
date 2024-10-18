@@ -6,7 +6,15 @@ import hexlet.code.repository.TaskRepository;
 import hexlet.code.service.TaskStatusService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,7 +24,7 @@ import java.util.List;
 @RequestMapping("/api/tasks")
 public class TaskController {
 
-    private static final Logger logger = LoggerFactory.getLogger(TaskController.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(TaskController.class);
 
     @Autowired
     private TaskRepository taskRepository;
@@ -39,7 +47,7 @@ public class TaskController {
             @RequestParam(required = false) Long assigneeId,
             @RequestParam(required = false) String status,
             @RequestParam(required = false) Long labelId) {
-        logger.info("Fetching tasks with filters - Title: {}, Assignee ID: {}, Status: {}, Label ID: {}",
+        LOGGER.info("Fetching tasks with filters - Title: {}, Assignee ID: {}, Status: {}, Label ID: {}",
                 titleCont, assigneeId, status, labelId);
         return taskRepository.findTasksByFilters(titleCont, assigneeId, status, labelId);
     }
@@ -52,14 +60,14 @@ public class TaskController {
      */
     @GetMapping("/{id}")
     public ResponseEntity<Task> getTaskById(@PathVariable Long id) {
-        logger.info("Fetching task with ID: {}", id);
+        LOGGER.info("Fetching task with ID: {}", id);
         return taskRepository.findById(id)
                 .map(task -> {
-                    logger.info("Found task: {}", task);
+                    LOGGER.info("Found task: {}", task);
                     return ResponseEntity.ok(task);
                 })
                 .orElseGet(() -> {
-                    logger.warn("Task with ID: {} not found", id);
+                    LOGGER.warn("Task with ID: {} not found", id);
                     return ResponseEntity.notFound().build();
                 });
     }
@@ -72,25 +80,25 @@ public class TaskController {
      */
     @PostMapping
     public Task createTask(@RequestBody Task task) {
-        logger.info("Received POST request to create Task: {}", task);
+        LOGGER.info("Received POST request to create Task: {}", task);
 
         // Устанавливаем дефолтные значения, если они не переданы
         if (task.getName() == null || task.getName().isEmpty()) {
             task.setName("Default Task Name"); // Установить дефолтное имя
-            logger.info("Task name was missing. Setting default name: {}", task.getName());
+            LOGGER.info("Task name was missing. Setting default name: {}", task.getName());
         }
         if (task.getDescription() == null || task.getDescription().isEmpty()) {
             task.setDescription("Default Description"); // Установить дефолтное описание
-            logger.info("Task description was missing. Setting default description: {}", task.getDescription());
+            LOGGER.info("Task description was missing. Setting default description: {}", task.getDescription());
         }
         if (task.getTaskStatus() == null) {
             TaskStatus defaultStatus = taskStatusService.getDefaultTaskStatus();
             task.setTaskStatus(defaultStatus); // Установить дефолтный статус
-            logger.info("Task status was missing. Setting default status: {}", defaultStatus);
+            LOGGER.info("Task status was missing. Setting default status: {}", defaultStatus);
         }
 
         Task createdTask = taskRepository.save(task);
-        logger.info("Task created successfully: {}", createdTask);
+        LOGGER.info("Task created successfully: {}", createdTask);
         return createdTask;
     }
 
@@ -103,30 +111,30 @@ public class TaskController {
      */
     @PutMapping("/{id}")
     public ResponseEntity<Task> updateTask(@PathVariable Long id, @RequestBody Task updatedTask) {
-        logger.info("Received PUT request to update Task with ID: {}", id);
+        LOGGER.info("Received PUT request to update Task with ID: {}", id);
         return taskRepository.findById(id)
                 .map(task -> {
-                    logger.info("Found task: {}", task);
+                    LOGGER.info("Found task: {}", task);
                     if (updatedTask.getName() != null) {
                         task.setName(updatedTask.getName());
-                        logger.info("Updated task name to: {}", updatedTask.getName());
+                        LOGGER.info("Updated task name to: {}", updatedTask.getName());
                     }
                     if (updatedTask.getDescription() != null) {
                         task.setDescription(updatedTask.getDescription());
-                        logger.info("Updated task description to: {}", updatedTask.getDescription());
+                        LOGGER.info("Updated task description to: {}", updatedTask.getDescription());
                     }
                     if (updatedTask.getTaskStatus() != null) {
                         task.setTaskStatus(updatedTask.getTaskStatus());
-                        logger.info("Updated task status to: {}", updatedTask.getTaskStatus());
+                        LOGGER.info("Updated task status to: {}", updatedTask.getTaskStatus());
                     }
                     task.setAssignee(updatedTask.getAssignee());
-                    logger.info("Updated task assignee to: {}", updatedTask.getAssignee());
+                    LOGGER.info("Updated task assignee to: {}", updatedTask.getAssignee());
                     Task savedTask = taskRepository.save(task);
-                    logger.info("Task updated successfully: {}", savedTask);
+                    LOGGER.info("Task updated successfully: {}", savedTask);
                     return ResponseEntity.ok(savedTask);
                 })
                 .orElseGet(() -> {
-                    logger.warn("Task with ID: {} not found", id);
+                    LOGGER.warn("Task with ID: {} not found", id);
                     return ResponseEntity.notFound().build();
                 });
     }
@@ -139,15 +147,15 @@ public class TaskController {
      */
     @DeleteMapping("/{id}")
     public ResponseEntity<Object> deleteTask(@PathVariable Long id) {
-        logger.info("Received DELETE request to remove Task with ID: {}", id);
+        LOGGER.info("Received DELETE request to remove Task with ID: {}", id);
         return taskRepository.findById(id)
                 .map(task -> {
                     taskRepository.delete(task);
-                    logger.info("Task deleted successfully: {}", task);
+                    LOGGER.info("Task deleted successfully: {}", task);
                     return ResponseEntity.noContent().build();
                 })
                 .orElseGet(() -> {
-                    logger.warn("Task with ID: {} not found", id);
+                    LOGGER.warn("Task with ID: {} not found", id);
                     return ResponseEntity.notFound().build();
                 });
     }
