@@ -60,7 +60,7 @@ public class TaskStatusController {
      */
     @PostMapping
     public ResponseEntity<TaskStatus> createTaskStatus(@Valid @RequestBody TaskStatus taskStatus) {
-        System.out.println("Received POST request to create TaskStatus: " + taskStatus);
+        LOGGER.info("Received POST request to create TaskStatus: {}", taskStatus.toString());
         TaskStatus createdTaskStatus = taskStatusService.createTaskStatus(taskStatus);
         return ResponseEntity.status(201).body(createdTaskStatus);
     }
@@ -99,12 +99,9 @@ public class TaskStatusController {
                                                      @RequestBody TaskStatusUpdateDto taskStatusUpdateDto) {
         LOGGER.info("Received request to partially update TaskStatus with id: {}", id);
         LOGGER.info("DTO Name: {}, DTO Slug: {}", taskStatusUpdateDto.getName(), taskStatusUpdateDto.getSlug());
-
         try {
             TaskStatus updatedTaskStatus = taskStatusService.partialUpdateTaskStatus(id, taskStatusUpdateDto);
-            LOGGER.info("TaskStatus updated successfully. New values: Name: {}, Slug: {}",
-                    updatedTaskStatus.getName(), updatedTaskStatus.getSlug());
-
+            LOGGER.info("TaskStatus updated successfully. New values: {}", updatedTaskStatus.toString());
             return ResponseEntity.ok(updatedTaskStatus);
         } catch (RuntimeException e) {
             LOGGER.error("Error during update: {}", e.getMessage());

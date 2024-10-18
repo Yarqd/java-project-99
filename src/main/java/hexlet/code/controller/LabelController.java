@@ -54,7 +54,7 @@ public class LabelController {
      */
     @PostMapping
     public ResponseEntity<LabelDTO> createLabel(@RequestBody Label label) {
-        System.out.println("Received POST request to create Label: " + label);
+        System.out.println("Received POST request to create Label: " + label.toString());
         Label savedLabel = labelRepository.save(label);
         return ResponseEntity.status(201).body(new LabelDTO(savedLabel.getId(), savedLabel.getName(),
                 savedLabel.getCreatedAt()));

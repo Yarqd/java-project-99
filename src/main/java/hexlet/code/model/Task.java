@@ -13,6 +13,7 @@ import jakarta.persistence.Table;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Класс Task представляет задачу в системе, которая имеет статус, исполнителя и может быть связана с метками.
@@ -185,5 +186,19 @@ public class Task {
      */
     public void setLabels(Set<Label> labels) {
         this.labels = labels;
+    }
+
+    @Override
+    public String toString() {
+        return "Task{"
+                + "id=" + id
+                + ", index=" + index
+                + ", name='" + name + '\''
+                + ", description='" + description + '\''
+                + ", taskStatus=" + (taskStatus != null ? taskStatus.getName() : "null")
+                + ", assignee=" + (assignee != null ? assignee.getFirstName() + " " + assignee.getLastName() : "null")
+                + ", labels=" + labels.stream().map(Label::getName).collect(Collectors.toSet())
+                + ", createdAt=" + createdAt
+                + '}';
     }
 }

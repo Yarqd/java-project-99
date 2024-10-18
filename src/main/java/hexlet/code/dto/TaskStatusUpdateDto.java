@@ -47,4 +47,12 @@ public final class TaskStatusUpdateDto {
     public boolean hasUpdates() {
         return name != null || slug != null;
     }
+
+    @Override
+    public String toString() {
+        return "TaskStatusUpdateDto{"
+                + "name='" + name + '\''
+                + ", slug='" + slug + '\''
+                + '}';
+    }
 }

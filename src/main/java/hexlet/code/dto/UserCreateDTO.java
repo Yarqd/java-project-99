@@ -79,4 +79,14 @@ public class UserCreateDTO {
     public void setPassword(String password) {
         this.password = password;
     }
+
+    @Override
+    public String toString() {
+        return "UserCreateDTO{"
+                + "email='" + email + '\''
+                + ", firstName='" + firstName + '\''
+                + ", lastName='" + lastName + '\''
+                + ", password='[PROTECTED]'"
+                + '}';
+    }
 }
