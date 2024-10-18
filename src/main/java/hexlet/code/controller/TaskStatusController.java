@@ -76,6 +76,13 @@ public class TaskStatusController {
     @PutMapping("/{id}")
     public TaskStatus updateTaskStatus(@PathVariable Long id, @Valid @RequestBody TaskStatus taskStatus) {
         LOGGER.info("Updating task status with id: {}, data: {}", id, taskStatus);
+
+        // Проверяем наличие slug. Если slug не передан, сохраняем старое значение.
+        TaskStatus existingTaskStatus = taskStatusService.getTaskStatusById(id);
+        if (taskStatus.getSlug() == null) {
+            taskStatus.setSlug(existingTaskStatus.getSlug());
+        }
+
         TaskStatus updatedTaskStatus = taskStatusService.updateTaskStatus(id, taskStatus);
         LOGGER.info("Task status updated successfully: {}", updatedTaskStatus);
         return updatedTaskStatus;

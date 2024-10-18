@@ -85,13 +85,19 @@ public class TaskStatusService {
         System.out.println("Полученное имя: " + taskStatusUpdateDto.getName());
         System.out.println("Полученный слаг: " + taskStatusUpdateDto.getSlug());
 
-        // Обновляем имя, даже если оно передано как null
-        taskStatus.setName(taskStatusUpdateDto.getName());
-        System.out.println("Обновляем имя на: " + taskStatusUpdateDto.getName());
+        // Обновляем имя, если оно не null
+        if (taskStatusUpdateDto.getName() != null) {
+            taskStatus.setName(taskStatusUpdateDto.getName());
+            System.out.println("Обновляем имя на: " + taskStatusUpdateDto.getName());
+        }
 
-        // Обновляем слаг, даже если он передан как null
-        taskStatus.setSlug(taskStatusUpdateDto.getSlug());
-        System.out.println("Обновляем слаг на: " + taskStatusUpdateDto.getSlug());
+        // Обновляем слаг, если он не null
+        if (taskStatusUpdateDto.getSlug() != null) {
+            taskStatus.setSlug(taskStatusUpdateDto.getSlug());
+            System.out.println("Обновляем слаг на: " + taskStatusUpdateDto.getSlug());
+        } else {
+            System.out.println("Слаг не передан, оставляем старое значение: " + taskStatus.getSlug());
+        }
 
         // Сохраняем обновленный статус задачи
         System.out.println("Сохраняем обновленный статус задачи.");
