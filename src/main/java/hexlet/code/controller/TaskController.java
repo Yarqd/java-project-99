@@ -69,10 +69,11 @@ public class TaskController {
     public Task createTask(@RequestBody Task task) {
         System.out.println("Received POST request to create Task: " + task.toString());
 
+        // Устанавливаем дефолтные значения, если они не переданы
         if (task.getName() == null || task.getName().isEmpty()) {
             task.setName("Default Task Name"); // Установить дефолтное имя
         }
-        if (task.getDescription() == null) {
+        if (task.getDescription() == null || task.getDescription().isEmpty()) {
             task.setDescription("Default Description"); // Установить дефолтное описание
         }
         if (task.getTaskStatus() == null) {
@@ -94,9 +95,15 @@ public class TaskController {
     public ResponseEntity<Task> updateTask(@PathVariable Long id, @RequestBody Task updatedTask) {
         return taskRepository.findById(id)
                 .map(task -> {
-                    task.setName(updatedTask.getName());
-                    task.setDescription(updatedTask.getDescription());
-                    task.setTaskStatus(updatedTask.getTaskStatus());
+                    if (updatedTask.getName() != null) {
+                        task.setName(updatedTask.getName());
+                    }
+                    if (updatedTask.getDescription() != null) {
+                        task.setDescription(updatedTask.getDescription());
+                    }
+                    if (updatedTask.getTaskStatus() != null) {
+                        task.setTaskStatus(updatedTask.getTaskStatus());
+                    }
                     task.setAssignee(updatedTask.getAssignee());
                     return ResponseEntity.ok(taskRepository.save(task));
                 })
