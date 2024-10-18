@@ -29,9 +29,10 @@ public final class Task {
 
     private Integer index;
 
-    @Column(nullable = false)
+    @Column
     private String name;
 
+    @Column
     private String description;
 
     @ManyToOne(optional = false)

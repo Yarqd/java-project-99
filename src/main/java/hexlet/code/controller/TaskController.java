@@ -68,10 +68,18 @@ public class TaskController {
     @PostMapping
     public Task createTask(@RequestBody Task task) {
         System.out.println("Received POST request to create Task: " + task.toString());
+
+        if (task.getName() == null || task.getName().isEmpty()) {
+            task.setName("Default Task Name"); // Установить дефолтное имя
+        }
+        if (task.getDescription() == null) {
+            task.setDescription("Default Description"); // Установить дефолтное описание
+        }
         if (task.getTaskStatus() == null) {
             TaskStatus defaultStatus = taskStatusService.getDefaultTaskStatus();
-            task.setTaskStatus(defaultStatus);
+            task.setTaskStatus(defaultStatus); // Установить дефолтный статус
         }
+
         return taskRepository.save(task);
     }
 
