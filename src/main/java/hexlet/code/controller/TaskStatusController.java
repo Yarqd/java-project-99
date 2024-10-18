@@ -14,11 +14,12 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
 import jakarta.validation.Valid;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.Locale;
 
 @RestController
 @RequestMapping("/api/task_statuses")
@@ -61,6 +62,17 @@ public class TaskStatusController {
     @PostMapping
     public ResponseEntity<TaskStatus> createTaskStatus(@Valid @RequestBody TaskStatus taskStatus) {
         LOGGER.info("Received POST request to create TaskStatus: {}", taskStatus.toString());
+
+        // Генерация имени, если оно не передано или пустое
+        if (taskStatus.getName() == null || taskStatus.getName().isEmpty()) {
+            taskStatus.setName("Default Name " + System.currentTimeMillis());
+        }
+
+        // Генерация slug, если он не передан или пустой
+        if (taskStatus.getSlug() == null || taskStatus.getSlug().isEmpty()) {
+            taskStatus.setSlug(taskStatus.getName().toLowerCase(Locale.ROOT).replaceAll("\\s+", "-"));
+        }
+
         TaskStatus createdTaskStatus = taskStatusService.createTaskStatus(taskStatus);
         return ResponseEntity.status(201).body(createdTaskStatus);
     }
@@ -76,9 +88,14 @@ public class TaskStatusController {
     public TaskStatus updateTaskStatus(@PathVariable Long id, @Valid @RequestBody TaskStatus taskStatus) {
         LOGGER.info("Updating task status with id: {}, data: {}", id, taskStatus);
 
-        // Проверяем наличие slug. Если slug не передан, сохраняем старое значение.
+        // Проверяем наличие slug и name. Если они не переданы, сохраняем или генерируем новые значения.
         TaskStatus existingTaskStatus = taskStatusService.getTaskStatusById(id);
-        if (taskStatus.getSlug() == null) {
+
+        if (taskStatus.getName() == null || taskStatus.getName().isEmpty()) {
+            taskStatus.setName(existingTaskStatus.getName());
+        }
+
+        if (taskStatus.getSlug() == null || taskStatus.getSlug().isEmpty()) {
             taskStatus.setSlug(existingTaskStatus.getSlug());
         }
 
