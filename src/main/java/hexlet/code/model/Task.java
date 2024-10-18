@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
  */
 @Entity
 @Table(name = "tasks")
-public class Task {
+public final class Task {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

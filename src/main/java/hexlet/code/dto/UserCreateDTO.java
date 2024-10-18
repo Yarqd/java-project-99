@@ -4,7 +4,7 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
-public class UserCreateDTO {
+public final class UserCreateDTO {
 
     @Email(message = "Неверный формат email")
     @NotBlank(message = "Email обязателен")
