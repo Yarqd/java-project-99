@@ -67,6 +67,7 @@ public class TaskController {
      */
     @PostMapping
     public Task createTask(@RequestBody Task task) {
+        System.out.println("Received POST request to create Task: " + task);
         if (task.getTaskStatus() == null) {
             TaskStatus defaultStatus = taskStatusService.getDefaultTaskStatus();
             task.setTaskStatus(defaultStatus);

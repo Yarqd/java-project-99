@@ -60,9 +60,8 @@ public class TaskStatusController {
      */
     @PostMapping
     public ResponseEntity<TaskStatus> createTaskStatus(@Valid @RequestBody TaskStatus taskStatus) {
-        LOGGER.info("Creating new task status: {}", taskStatus);
+        System.out.println("Received POST request to create TaskStatus: " + taskStatus);
         TaskStatus createdTaskStatus = taskStatusService.createTaskStatus(taskStatus);
-        LOGGER.info("Task status created successfully: {}", createdTaskStatus);
         return ResponseEntity.status(201).body(createdTaskStatus);
     }
 

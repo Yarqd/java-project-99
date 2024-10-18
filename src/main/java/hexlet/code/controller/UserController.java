@@ -33,8 +33,9 @@ public class UserController {
      */
     @PostMapping
     public ResponseEntity<UserResponseDTO> createUser(@RequestBody UserCreateDTO userCreateDTO) {
+        System.out.println("Received POST request to create User: " + userCreateDTO);
         UserResponseDTO user = userService.createUser(userCreateDTO);
-        return new ResponseEntity<>(user, HttpStatus.CREATED);  // Возвращаем статус 201 CREATED
+        return new ResponseEntity<>(user, HttpStatus.CREATED);
     }
 
     /**
