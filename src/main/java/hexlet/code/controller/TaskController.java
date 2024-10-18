@@ -1,14 +1,16 @@
 package hexlet.code.controller;
 
 import hexlet.code.model.Task;
+import hexlet.code.model.TaskStatus;
 import hexlet.code.repository.TaskRepository;
+import hexlet.code.service.TaskStatusService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -22,6 +24,9 @@ public class TaskController {
 
     @Autowired
     private TaskRepository taskRepository;
+
+    @Autowired
+    private TaskStatusService taskStatusService;
 
     /**
      * Возвращает список задач с возможностью фильтрации по заголовку, назначенному пользователю, статусу и метке.
@@ -55,13 +60,17 @@ public class TaskController {
     }
 
     /**
-     * Создает новую задачу.
+     * Создает новую задачу. Если статус задачи не указан, присваивает статус по умолчанию.
      *
      * @param task объект задачи
      * @return созданная задача
      */
     @PostMapping
     public Task createTask(@RequestBody Task task) {
+        if (task.getTaskStatus() == null) {
+            TaskStatus defaultStatus = taskStatusService.getDefaultTaskStatus();
+            task.setTaskStatus(defaultStatus);
+        }
         return taskRepository.save(task);
     }
 
