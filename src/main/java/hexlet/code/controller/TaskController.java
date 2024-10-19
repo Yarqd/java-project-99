@@ -22,7 +22,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/tasks")
-public class TaskController {
+public class TaskController { // Убрали final с класса
 
     private static final Logger LOGGER = LoggerFactory.getLogger(TaskController.class);
 
@@ -79,27 +79,36 @@ public class TaskController {
      * @return созданная задача
      */
     @PostMapping
-    public Task createTask(@RequestBody Task task) {
+    public ResponseEntity<Object> createTask(@RequestBody Task task) {
         LOGGER.info("Received POST request to create Task: {}", task);
 
-        // Устанавливаем дефолтные значения, если они не переданы
+        // Проверка обязательных полей
         if (task.getName() == null || task.getName().isEmpty()) {
-            task.setName("Default Task Name"); // Установить дефолтное имя
-            LOGGER.info("Task name was missing. Setting default name: {}", task.getName());
+            String errorMessage = "Task name is required";
+            LOGGER.error(errorMessage);
+            return ResponseEntity.badRequest().body(errorMessage);
         }
         if (task.getDescription() == null || task.getDescription().isEmpty()) {
-            task.setDescription("Default Description"); // Установить дефолтное описание
-            LOGGER.info("Task description was missing. Setting default description: {}", task.getDescription());
+            String errorMessage = "Task description is required";
+            LOGGER.error(errorMessage);
+            return ResponseEntity.badRequest().body(errorMessage);
         }
+
+        // Устанавливаем дефолтный статус, если не указан
         if (task.getTaskStatus() == null) {
             TaskStatus defaultStatus = taskStatusService.getDefaultTaskStatus();
-            task.setTaskStatus(defaultStatus); // Установить дефолтный статус
+            if (defaultStatus == null) {
+                String errorMessage = "Default TaskStatus is not available";
+                LOGGER.error(errorMessage);
+                return ResponseEntity.badRequest().body(errorMessage);
+            }
+            task.setTaskStatus(defaultStatus);
             LOGGER.info("Task status was missing. Setting default status: {}", defaultStatus);
         }
 
         Task createdTask = taskRepository.save(task);
         LOGGER.info("Task created successfully: {}", createdTask);
-        return createdTask;
+        return ResponseEntity.status(201).body(createdTask);
     }
 
     /**
