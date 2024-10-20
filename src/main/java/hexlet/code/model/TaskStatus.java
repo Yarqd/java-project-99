@@ -8,6 +8,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import java.time.LocalDateTime;
 
 @Entity
@@ -24,6 +25,7 @@ public class TaskStatus {
     @Column(nullable = false, unique = true)
     private String slug;
 
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
