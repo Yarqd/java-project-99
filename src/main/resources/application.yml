@@ -36,13 +36,13 @@ spring:
     activate:
       on-profile: prod
   datasource:
-    url: jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}
+    url: jdbc:postgresql://dpg-csck1dij1k6c739buutg-a.frankfurt-postgres.render.com:5432/dbname_w2y3
     driver-class-name: org.postgresql.Driver
-    username: ${DB_USERNAME}
-    password: ${DB_PASSWORD}
+    username: dbname_w2y3_user
+    password: YWXdq9IHOpaAK7SjA0TF7JgmZNnabXbD
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: update  # Или "validate", если вы не хотите автоматически изменять схему
     show-sql: true
     open-in-view: false  # Отключить open-in-view
   sentry:
