@@ -31,6 +31,12 @@ public class UserService {
     @Transactional
     public UserResponseDTO createUser(UserCreateDTO userDTO) {
         User user = new User();
+
+        // Если id не null, устанавливаем его, иначе оно генерируется автоматически
+        if (userDTO.getId() != null) {
+            user.setId(userDTO.getId());
+        }
+
         user.setEmail(userDTO.getEmail());
         user.setFirstName(userDTO.getFirstName());
         user.setLastName(userDTO.getLastName());
