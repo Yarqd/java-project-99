@@ -10,4 +10,10 @@ Task manager. (At the final stage of development)
 
 Home page: https://java-project-99-5ggh.onrender.com/
 
+Use for authorization:
+
+login: hexlet@example.com
+
+password: qwerty
+
 Welcome page: https://java-project-99-5ggh.onrender.com/welcome
