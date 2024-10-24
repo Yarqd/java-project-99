@@ -3,6 +3,7 @@ package hexlet.code.security;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.security.Keys;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -13,11 +14,15 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.security.Key;
 import java.util.Date;
 
 public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 
     private final AuthenticationManager authenticationManager;
+
+    // Генерация безопасного ключа для подписи JWT токенов
+    private final Key signingKey = Keys.secretKeyFor(SignatureAlgorithm.HS512);
 
     public JwtAuthenticationFilter(AuthenticationManager authenticationManager) {
         this.authenticationManager = authenticationManager;
@@ -66,16 +71,22 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
     @Override
     protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response,
                                             FilterChain chain, Authentication authResult) throws IOException {
-        // Генерируем JWT токен
+        // Генерируем JWT токен с использованием безопасного ключа
         String token = Jwts.builder()
                 .setSubject(authResult.getName())
                 .setExpiration(new Date(System.currentTimeMillis() + 864000000))  // Токен на 10 дней
-                .signWith(SignatureAlgorithm.HS512, "SecretKeyToGenJWTs")  // Подпись токена
+                .signWith(signingKey)  // Используем сгенерированный ключ
                 .compact();
 
-        // Возвращаем токен в ответе
+        // Добавляем токен в заголовок
         response.addHeader("Authorization", "Bearer " + token);
+
+        // Возвращаем токен в теле ответа
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        response.getWriter().write("{\"token\": \"" + token + "\"}");
     }
+
 
     // DTO для запроса логина
     static class UserLoginRequest {

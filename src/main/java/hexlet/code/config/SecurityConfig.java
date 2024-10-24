@@ -1,5 +1,6 @@
 package hexlet.code.config;
 
+import hexlet.code.security.JwtAuthenticationFilter;
 import hexlet.code.security.JwtAuthorizationFilter;
 import hexlet.code.service.UserDetailsServiceImpl;
 import org.springframework.context.annotation.Bean;
@@ -51,10 +52,14 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // Открываем доступ для создания пользователей без авторизации
                         .requestMatchers("/api/users").permitAll()
+                        // Открываем доступ для логина
+                        .requestMatchers("/api/login").permitAll()
                         // Защищаем маршруты API для остальных операций с пользователями
                         .requestMatchers("/api/users/**").authenticated()
                         .anyRequest().permitAll()  // Разрешаем доступ к остальным маршрутам
                 )
+                // Добавляем фильтр для аутентификации
+                .addFilterBefore(new JwtAuthenticationFilter(authManager), UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(new JwtAuthorizationFilter(authManager), UsernamePasswordAuthenticationFilter.class)
                 // Добавляем фильтр для проверки токенов
                 .httpBasic(withDefaults())  // Используем Basic Auth
@@ -65,6 +70,7 @@ public class SecurityConfig {
 
         return http.build();
     }
+
 
     /**
      * Настраивает менеджер аутентификации с использованием UserDetailsService и BCryptPasswordEncoder.
