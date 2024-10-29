@@ -10,7 +10,7 @@ import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -52,7 +52,7 @@ public final class Task {
     private Set<Label> labels = new HashSet<>();
 
     @Column(nullable = false, updatable = false)
-    private final LocalDateTime createdAt = LocalDateTime.now();
+    private final Instant createdAt = Instant.now();
 
     /**
      * Возвращает идентификатор задачи.
@@ -167,7 +167,7 @@ public final class Task {
      *
      * @return дата создания задачи.
      */
-    public LocalDateTime getCreatedAt() {
+    public Instant getCreatedAt() {
         return createdAt;
     }
 

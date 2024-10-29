@@ -7,9 +7,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Column;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
-
 import com.fasterxml.jackson.annotation.JsonFormat;
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 @Entity
 @Table(name = "TasksStatuses")
@@ -25,13 +24,12 @@ public class TaskStatus {
     @Column(nullable = false, unique = true)
     private String slug;
 
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss", timezone = "UTC")
     @Column(nullable = false, updatable = false)
-    private LocalDateTime createdAt;
+    private Instant createdAt;
 
     // Конструктор по умолчанию
     public TaskStatus() {
-        // оставляем пустым, так как createdAt будет заполняться через @PrePersist
     }
 
     // Конструктор с параметрами
@@ -45,7 +43,7 @@ public class TaskStatus {
      */
     @PrePersist
     protected void onCreate() {
-        this.createdAt = LocalDateTime.now();
+        this.createdAt = Instant.now();
     }
 
     /**
@@ -92,7 +90,7 @@ public class TaskStatus {
      * Возвращает дату создания статуса задачи.
      * @return дата создания статуса задачи
      */
-    public LocalDateTime getCreatedAt() {
+    public Instant getCreatedAt() {
         return createdAt;
     }
 }

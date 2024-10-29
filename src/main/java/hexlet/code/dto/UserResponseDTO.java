@@ -1,6 +1,6 @@
 package hexlet.code.dto;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 /**
  * Класс UserResponseDTO представляет собой объект передачи данных (DTO) для пользователя.
@@ -12,7 +12,7 @@ public class UserResponseDTO {
     private String firstName;
     private String lastName;
     private String email;
-    private LocalDateTime createdAt;
+    private Instant createdAt;
 
     /**
      * Возвращает идентификатор пользователя.
@@ -82,7 +82,7 @@ public class UserResponseDTO {
      * Возвращает дату создания пользователя.
      * @return дата создания пользователя.
      */
-    public LocalDateTime getCreatedAt() {
+    public Instant getCreatedAt() {
         return createdAt;
     }
 
@@ -90,7 +90,7 @@ public class UserResponseDTO {
      * Устанавливает дату создания пользователя.
      * @param createdAt дата создания пользователя.
      */
-    public void setCreatedAt(LocalDateTime createdAt) {
+    public void setCreatedAt(Instant createdAt) {
         this.createdAt = createdAt;
     }
 }

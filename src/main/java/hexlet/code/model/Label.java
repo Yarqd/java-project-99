@@ -9,7 +9,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.PrePersist;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -25,7 +25,7 @@ public class Label {
     private String name;
 
     @Column(nullable = false, updatable = false)
-    private LocalDateTime createdAt;
+    private Instant createdAt;
 
     @ManyToMany(mappedBy = "labels", fetch = FetchType.EAGER)
     private Set<Task> tasks = new HashSet<>();
@@ -44,7 +44,7 @@ public class Label {
      */
     @PrePersist
     protected void onCreate() {
-        this.createdAt = LocalDateTime.now();
+        this.createdAt = Instant.now();
     }
 
     /**
@@ -83,7 +83,7 @@ public class Label {
      * Возвращает дату создания метки.
      * @return дата создания метки
      */
-    public LocalDateTime getCreatedAt() {
+    public Instant getCreatedAt() {
         return createdAt;
     }
 

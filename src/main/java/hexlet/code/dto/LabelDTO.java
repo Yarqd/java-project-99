@@ -1,19 +1,19 @@
 package hexlet.code.dto;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 public class LabelDTO {
 
     private Long id;
     private String name;
-    private LocalDateTime createdAt;
+    private Instant createdAt;
 
     // Пустой конструктор
     public LabelDTO() {
     }
 
     // Конструктор с параметрами
-    public LabelDTO(Long id, String name, LocalDateTime createdAt) {
+    public LabelDTO(Long id, String name, Instant createdAt) {
         this.id = id;
         this.name = name;
         this.createdAt = createdAt;
@@ -60,7 +60,7 @@ public class LabelDTO {
      *
      * @return дата создания метки
      */
-    public LocalDateTime getCreatedAt() {
+    public Instant getCreatedAt() {
         return createdAt;
     }
 
@@ -69,7 +69,7 @@ public class LabelDTO {
      *
      * @param createdAt дата создания метки
      */
-    public void setCreatedAt(LocalDateTime createdAt) {
+    public void setCreatedAt(Instant createdAt) {
         this.createdAt = createdAt;
     }
 }
