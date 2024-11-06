@@ -22,7 +22,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
-public class UserControllerTest {
+public final class UserControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
@@ -39,6 +39,12 @@ public class UserControllerTest {
     private String jwtToken;
     private User testUser;
 
+    /**
+     * Инициализация перед каждым тестом.
+     * Очищает репозиторий, создает тестового пользователя и генерирует JWT токен.
+     *
+     * @throws Exception если происходит ошибка во время инициализации
+     */
     @BeforeEach
     public void setUp() throws Exception {
         userRepository.deleteAll();
