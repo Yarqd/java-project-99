@@ -3,6 +3,8 @@ package hexlet.code.config;
 import hexlet.code.security.JwtAuthenticationFilter;
 import hexlet.code.security.JwtAuthorizationFilter;
 import hexlet.code.service.UserDetailsServiceImpl;
+import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.security.Keys;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -14,71 +16,55 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+import java.security.Key;
+
 import static org.springframework.security.config.Customizer.withDefaults;
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
 
-    private UserDetailsService userDetailsService;
+    private final UserDetailsService userDetailsService;
+
+    // Генерация ключа с длиной 256 бит
+    private final Key signingKey = Keys.secretKeyFor(SignatureAlgorithm.HS512);
 
     public SecurityConfig(UserDetailsServiceImpl userDetailsService) {
         this.userDetailsService = userDetailsService;
     }
 
-    /**
-     * Конфигурируем BCryptPasswordEncoder для шифрования паролей.
-     *
-     * @return экземпляр BCryptPasswordEncoder
-     */
+    @Bean
+    public Key signingKey() {
+        return signingKey;
+    }
+
     @Bean
     public BCryptPasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
-    /**
-     * Настраивает фильтры безопасности, авторизацию и маршруты.
-     *
-     * @param http        объект HttpSecurity для настройки
-     * @param authManager менеджер аутентификации
-     * @return настроенный SecurityFilterChain
-     * @throws Exception если возникнет ошибка при настройке
-     */
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http, AuthenticationManager authManager)
             throws Exception {
         http
-                .csrf(csrf -> csrf.disable())  // Отключаем CSRF
+                .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        // Открываем доступ для создания пользователей без авторизации
                         .requestMatchers("/api/users").permitAll()
-                        // Открываем доступ для логина
                         .requestMatchers("/api/login").permitAll()
-                        // Защищаем маршруты API для остальных операций с пользователями
                         .requestMatchers("/api/users/**").authenticated()
-                        .anyRequest().permitAll()  // Разрешаем доступ к остальным маршрутам
+                        .anyRequest().permitAll()
                 )
-                // Добавляем фильтр для аутентификации
-                .addFilterBefore(new JwtAuthenticationFilter(authManager), UsernamePasswordAuthenticationFilter.class)
-                .addFilterBefore(new JwtAuthorizationFilter(authManager), UsernamePasswordAuthenticationFilter.class)
-                // Добавляем фильтр для проверки токенов
-                .httpBasic(withDefaults())  // Используем Basic Auth
+                .addFilterBefore(new JwtAuthenticationFilter(authManager, signingKey), UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(new JwtAuthorizationFilter(authManager, signingKey), UsernamePasswordAuthenticationFilter.class)
+                .httpBasic(withDefaults())
                 .logout(logout -> logout
-                        .logoutUrl("/logout")  // URL для логаута
-                        .logoutSuccessUrl("/")  // Куда перенаправить после логаута
-                        .permitAll());  // Открываем доступ к логауту
+                        .logoutUrl("/logout")
+                        .logoutSuccessUrl("/")
+                        .permitAll());
 
         return http.build();
     }
 
-
-    /**
-     * Настраивает менеджер аутентификации с использованием UserDetailsService и BCryptPasswordEncoder.
-     *
-     * @param http объект HttpSecurity для настройки менеджера аутентификации
-     * @return настроенный AuthenticationManager
-     * @throws Exception если возникнет ошибка при настройке
-     */
     @Bean
     public AuthenticationManager authenticationManager(HttpSecurity http) throws Exception {
         AuthenticationManagerBuilder authenticationManagerBuilder = http

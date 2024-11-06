@@ -10,7 +10,6 @@ import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import java.time.Instant;
 import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
 /**
@@ -31,9 +30,8 @@ public class User {
     @Column
     private String lastName;
 
-    @Column(nullable = false, unique = true)
+    @Column(unique = true)
     @Email(message = "Invalid email format")
-    @NotBlank(message = "Email is required")
     private String email;
 
     @Column(nullable = false)
