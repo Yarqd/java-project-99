@@ -36,10 +36,10 @@ spring:
     activate:
       on-profile: prod
   datasource:
-    url: jdbc:postgresql://dpg-csck1dij1k6c739buutg-a.frankfurt-postgres.render.com:5432/dbname_w2y3
+    url: ${DATABASE_URL}  # URL базы данных через переменную окружения
     driver-class-name: org.postgresql.Driver
-    username: dbname_w2y3_user
-    password: YWXdq9IHOpaAK7SjA0TF7JgmZNnabXbD
+    username: ${DATABASE_USERNAME}  # Имя пользователя через переменную окружения
+    password: ${DATABASE_PASSWORD}  # Пароль через переменную окружения
   jpa:
     hibernate:
       ddl-auto: update  # Или "validate", если вы не хотите автоматически изменять схему
