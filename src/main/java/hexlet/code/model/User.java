@@ -1,20 +1,16 @@
 package hexlet.code.model;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
-import jakarta.persistence.Column;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.PreUpdate;
-import java.time.Instant;
+import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Size;
 
+import java.time.Instant;
+import java.util.HashSet;
+import java.util.Set;
+
 /**
  * Класс User представляет сущность пользователя, которая хранится в базе данных.
- * Содержит основные данные о пользователе, такие как имя, фамилия, email и пароль.
+ * Содержит основные данные о пользователе, такие как имя, фамилия, email, пароль и роли.
  */
 @Entity
 @Table(name = "users")
@@ -44,13 +40,21 @@ public class User {
     @Column
     private Instant updatedAt;
 
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+            name = "user_roles",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "role_id")
+    )
+    private Set<Role> roles = new HashSet<>();
+
     /**
      * Конструктор с параметрами.
      *
-     * @param email email пользователя
+     * @param email     email пользователя
      * @param firstName имя пользователя
-     * @param lastName фамилия пользователя
-     * @param password пароль пользователя
+     * @param lastName  фамилия пользователя
+     * @param password  пароль пользователя
      */
     public User(String email, String firstName, String lastName, String password) {
         this.email = email;
@@ -65,130 +69,70 @@ public class User {
     public User() {
     }
 
-    /**
-     * Возвращает идентификатор пользователя.
-     *
-     * @return идентификатор пользователя.
-     */
+    // Геттеры и сеттеры для всех полей, включая роли
+
     public Long getId() {
         return id;
     }
 
-    /**
-     * Устанавливает идентификатор пользователя.
-     *
-     * @param id идентификатор пользователя.
-     */
     public void setId(Long id) {
         this.id = id;
     }
 
-    /**
-     * Возвращает имя пользователя.
-     *
-     * @return имя пользователя.
-     */
     public String getFirstName() {
         return firstName;
     }
 
-    /**
-     * Устанавливает имя пользователя.
-     *
-     * @param firstName имя пользователя.
-     */
     public void setFirstName(String firstName) {
         this.firstName = firstName;
     }
 
-    /**
-     * Возвращает фамилию пользователя.
-     *
-     * @return фамилия пользователя.
-     */
     public String getLastName() {
         return lastName;
     }
 
-    /**
-     * Устанавливает фамилию пользователя.
-     *
-     * @param lastName фамилия пользователя.
-     */
     public void setLastName(String lastName) {
         this.lastName = lastName;
     }
 
-    /**
-     * Возвращает email пользователя.
-     *
-     * @return email пользователя.
-     */
     public String getEmail() {
         return email;
     }
 
-    /**
-     * Устанавливает email пользователя.
-     *
-     * @param email email пользователя.
-     */
     public void setEmail(String email) {
         this.email = email;
     }
 
-    /**
-     * Возвращает пароль пользователя.
-     *
-     * @return пароль пользователя.
-     */
     public String getPassword() {
         return password;
     }
 
-    /**
-     * Устанавливает пароль пользователя.
-     *
-     * @param password пароль пользователя.
-     */
     public void setPassword(String password) {
         this.password = password;
     }
 
-    /**
-     * Возвращает дату создания пользователя.
-     *
-     * @return дата создания пользователя.
-     */
     public Instant getCreatedAt() {
         return createdAt;
     }
 
-    /**
-     * Устанавливает дату создания пользователя.
-     *
-     * @param createdAt дата создания пользователя.
-     */
     public void setCreatedAt(Instant createdAt) {
         this.createdAt = createdAt;
     }
 
-    /**
-     * Возвращает дату обновления пользователя.
-     *
-     * @return дата обновления пользователя.
-     */
     public Instant getUpdatedAt() {
         return updatedAt;
     }
 
-    /**
-     * Устанавливает дату обновления пользователя.
-     *
-     * @param updatedAt дата обновления пользователя.
-     */
     public void setUpdatedAt(Instant updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public Set<Role> getRoles() {
+        return roles;
+    }
+
+    public void setRoles(Set<Role> roles) {
+        this.roles = roles;
     }
 
     /**

@@ -12,35 +12,25 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
 import java.security.Key;
 import java.util.Date;
 
 public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 
+    private static final Logger logger = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
     private final AuthenticationManager authenticationManager;
     private final Key signingKey;
 
-    /**
-     * Конструктор JwtAuthenticationFilter.
-     * @param authenticationManager менеджер аутентификации для проверки учетных данных
-     * @param signingKey ключ для подписи JWT токенов
-     */
     public JwtAuthenticationFilter(AuthenticationManager authenticationManager, Key signingKey) {
         this.authenticationManager = authenticationManager;
         this.signingKey = signingKey;
-        setFilterProcessesUrl("/api/login");  // Указываем путь для логина
+        setFilterProcessesUrl("/api/login");
     }
 
-    /**
-     * Попытка аутентификации пользователя на основе переданных учетных данных.
-     * Этот метод не предназначен для расширения.
-     *
-     * @param request HTTP-запрос, содержащий учетные данные пользователя
-     * @param response HTTP-ответ
-     * @return объект Authentication, представляющий аутентификационные данные пользователя
-     * @throws AuthenticationException если аутентификация не удалась
-     */
     @Override
     public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response)
             throws AuthenticationException {
@@ -51,20 +41,11 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
                     new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword());
             return authenticationManager.authenticate(authenticationToken);
         } catch (IOException e) {
+            logger.error("Authentication failed: {}", e.getMessage());
             throw new RuntimeException(e);
         }
     }
 
-    /**
-     * Обработка успешной аутентификации, создавая и отправляя JWT токен в ответе.
-     * Этот метод является final и не должен быть переопределен.
-     *
-     * @param request HTTP-запрос
-     * @param response HTTP-ответ, в который добавляется токен
-     * @param chain цепочка фильтров
-     * @param authResult результат аутентификации, содержащий данные о пользователе
-     * @throws IOException если произошла ошибка ввода-вывода
-     */
     @Override
     protected final void successfulAuthentication(HttpServletRequest request, HttpServletResponse response,
                                                   FilterChain chain, Authentication authResult) throws IOException {
@@ -78,11 +59,10 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
         response.getWriter().write("{\"token\": \"" + token + "\"}");
+
+        logger.info("User {} authenticated successfully", authResult.getName());
     }
 
-    /**
-     * Вспомогательный класс для получения данных пользователя из запроса.
-     */
     static class UserLoginRequest {
         private String username;
         private String password;

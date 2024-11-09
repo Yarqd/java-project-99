@@ -5,14 +5,10 @@ import hexlet.code.model.Label;
 import hexlet.code.repository.LabelRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -21,81 +17,84 @@ import java.util.stream.Collectors;
 @RequestMapping("/api/labels")
 public class LabelController {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(LabelController.class);
+
     @Autowired
     private LabelRepository labelRepository;
 
-    /**
-     * Возвращает список всех меток.
-     * @return Список DTO всех меток
-     */
     @GetMapping
+    @PreAuthorize("isAuthenticated()")
     public List<LabelDTO> getAllLabels() {
-        return labelRepository.findAll().stream()
+        LOGGER.info("Fetching all labels");
+        List<LabelDTO> labels = labelRepository.findAll().stream()
                 .map(label -> new LabelDTO(label.getId(), label.getName(), label.getCreatedAt()))
                 .collect(Collectors.toList());
+        LOGGER.info("Found {} labels", labels.size());
+        return labels;
     }
 
-    /**
-     * Возвращает метку по ее идентификатору.
-     * @param id Идентификатор метки
-     * @return DTO метки или 404, если метка не найдена
-     */
     @GetMapping("/{id}")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<LabelDTO> getLabelById(@PathVariable Long id) {
-        return labelRepository.findById(id)
-                .map(label -> ResponseEntity.ok(new LabelDTO(label.getId(), label.getName(), label.getCreatedAt())))
-                .orElse(ResponseEntity.notFound().build());
-    }
-
-    /**
-     * Создает новую метку.
-     * @param label Объект метки для создания
-     * @return DTO созданной метки с кодом 201
-     */
-    @PostMapping
-    public ResponseEntity<LabelDTO> createLabel(@RequestBody Label label) {
-        System.out.println("Received POST request to create Label: " + label.toString());
-        Label savedLabel = labelRepository.save(label);
-        return ResponseEntity.status(201).body(new LabelDTO(savedLabel.getId(), savedLabel.getName(),
-                savedLabel.getCreatedAt()));
-    }
-
-    /**
-     * Обновляет существующую метку.
-     * @param id Идентификатор метки
-     * @param updatedLabel Обновленные данные метки
-     * @return DTO обновленной метки или 404, если метка не найдена
-     */
-    @PutMapping("/{id}")
-    public ResponseEntity<LabelDTO> updateLabel(@PathVariable Long id, @RequestBody Label updatedLabel) {
+        LOGGER.info("Fetching label with ID: {}", id);
         return labelRepository.findById(id)
                 .map(label -> {
+                    LabelDTO labelDTO = new LabelDTO(label.getId(), label.getName(), label.getCreatedAt());
+                    LOGGER.info("Label found: {}", labelDTO);
+                    return ResponseEntity.ok(labelDTO);
+                })
+                .orElseGet(() -> {
+                    LOGGER.warn("Label with ID: {} not found", id);
+                    return ResponseEntity.notFound().build();
+                });
+    }
+
+    @PostMapping
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<LabelDTO> createLabel(@RequestBody Label label) {
+        LOGGER.info("Received POST request to create Label: {}", label);
+        Label savedLabel = labelRepository.save(label);
+        LabelDTO labelDTO = new LabelDTO(savedLabel.getId(), savedLabel.getName(), savedLabel.getCreatedAt());
+        LOGGER.info("Label created successfully: {}", labelDTO);
+        return ResponseEntity.status(201).body(labelDTO);
+    }
+
+    @PutMapping("/{id}")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<LabelDTO> updateLabel(@PathVariable Long id, @RequestBody Label updatedLabel) {
+        LOGGER.info("Received PUT request to update Label with ID: {}", id);
+        return labelRepository.findById(id)
+                .map(label -> {
+                    LOGGER.info("Label found: {}", label);
                     label.setName(updatedLabel.getName());
                     Label savedLabel = labelRepository.save(label);
-                    return ResponseEntity.ok(new LabelDTO(savedLabel.getId(), savedLabel.getName(),
-                            savedLabel.getCreatedAt()));
+                    LabelDTO labelDTO = new LabelDTO(savedLabel.getId(), savedLabel.getName(), savedLabel.getCreatedAt());
+                    LOGGER.info("Label updated successfully: {}", labelDTO);
+                    return ResponseEntity.ok(labelDTO);
                 })
-                .orElse(ResponseEntity.notFound().build());
+                .orElseGet(() -> {
+                    LOGGER.warn("Label with ID: {} not found", id);
+                    return ResponseEntity.notFound().build();
+                });
     }
 
-    /**
-     * Удаляет метку, если она не связана с задачами.
-     * @param id Идентификатор метки
-     * @return Статус 204 при успешном удалении, 400 если метка связана с задачами, или 404 если метка не найдена
-     */
     @DeleteMapping("/{id}")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<?> deleteLabel(@PathVariable Long id) {
+        LOGGER.info("Received DELETE request to remove Label with ID: {}", id);
         return labelRepository.findById(id)
                 .map(label -> {
-                    // Проверка, связана ли метка с задачами
                     if (!label.getTasks().isEmpty()) {
-                        return ResponseEntity.badRequest()
-                                .body("Нельзя удалить метку, она связана с задачами.");
+                        LOGGER.warn("Label with ID: {} is associated with tasks and cannot be deleted", id);
+                        return ResponseEntity.badRequest().body("Нельзя удалить метку, она связана с задачами.");
                     }
-
                     labelRepository.delete(label);
+                    LOGGER.info("Label with ID: {} deleted successfully", id);
                     return ResponseEntity.noContent().build();
                 })
-                .orElse(ResponseEntity.notFound().build());
+                .orElseGet(() -> {
+                    LOGGER.warn("Label with ID: {} not found", id);
+                    return ResponseEntity.notFound().build();
+                });
     }
 }

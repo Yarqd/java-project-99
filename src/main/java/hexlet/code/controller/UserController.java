@@ -30,14 +30,14 @@ public final class UserController {
     private UserService userService;
 
     /**
-     * Создание нового пользователя.
+     * Создание нового пользователя с дефолтной ролью "USER".
      *
      * @param userCreateDTO DTO с данными для создания пользователя
      * @return созданный пользователь и статус 201 (Created)
      */
     @PostMapping
     public ResponseEntity<UserResponseDTO> createUser(@RequestBody UserCreateDTO userCreateDTO) {
-        UserResponseDTO user = userService.createUser(userCreateDTO);
+        UserResponseDTO user = userService.createUserWithRoles(userCreateDTO, List.of("USER"));
         return new ResponseEntity<>(user, HttpStatus.CREATED);
     }
 

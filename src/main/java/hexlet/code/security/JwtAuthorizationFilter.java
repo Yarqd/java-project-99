@@ -1,6 +1,10 @@
 package hexlet.code.security;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.MalformedJwtException;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.SignatureException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -9,6 +13,8 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.security.Key;
@@ -16,52 +22,60 @@ import java.util.ArrayList;
 
 public class JwtAuthorizationFilter extends BasicAuthenticationFilter {
 
+    private static final Logger logger = LoggerFactory.getLogger(JwtAuthorizationFilter.class);
     private final Key signingKey;
+    private final ObjectMapper objectMapper;
 
-    /**
-     * Конструктор JwtAuthorizationFilter.
-     * @param authManager менеджер аутентификации, передаваемый для базовой инициализации
-     * @param signingKey ключ для проверки подписи JWT токенов
-     */
-    public JwtAuthorizationFilter(AuthenticationManager authManager, Key signingKey) {
+    public JwtAuthorizationFilter(AuthenticationManager authManager, Key signingKey, ObjectMapper objectMapper) {
         super(authManager);
         this.signingKey = signingKey;
+        this.objectMapper = objectMapper;
     }
 
-    /**
-     * Выполняет фильтрацию запроса для проверки JWT токена.
-     * Этот метод является final и не должен быть переопределен.
-     *
-     * @param request HTTP-запрос
-     * @param response HTTP-ответ
-     * @param chain цепочка фильтров
-     * @throws IOException если произошла ошибка ввода-вывода
-     * @throws ServletException если произошла ошибка в сервлете
-     */
     @Override
-    protected final void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
             throws IOException, ServletException {
         String header = request.getHeader("Authorization");
+
+        // Логируем полученный заголовок Authorization
+        logger.info("Received Authorization Header: {}", header);
+
         if (header == null || !header.startsWith("Bearer ")) {
+            logger.warn("Authorization header is missing or does not start with Bearer");
             chain.doFilter(request, response);
             return;
         }
 
-        UsernamePasswordAuthenticationToken authentication = getAuthentication(header);
-        if (authentication != null) {
-            SecurityContextHolder.getContext().setAuthentication(authentication);
+        // Проверяем, если заголовок содержит '[object Object]', пытаемся преобразовать его
+        if ("Bearer [object Object]".equals(header)) {
+            logger.warn("Received token in incorrect format '[object Object]'. Attempting to parse.");
+            chain.doFilter(request, response);
+            return;
         }
 
-        chain.doFilter(request, response);
+        try {
+            UsernamePasswordAuthenticationToken authentication = getAuthentication(header);
+            if (authentication != null) {
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+                logger.info("User authenticated: {}", authentication.getName());
+            } else {
+                logger.warn("Authentication failed, no user found in token.");
+            }
+            chain.doFilter(request, response);
+        } catch (MalformedJwtException | SignatureException e) {
+            logger.error("Invalid JWT token: {}", e.getMessage());
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid JWT token");
+        } catch (ExpiredJwtException e) {
+            logger.warn("Expired JWT token: {}", e.getMessage());
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Expired JWT token");
+        } catch (Exception e) {
+            logger.error("Failed to authenticate user: {}", e.getMessage());
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Failed to authenticate");
+        }
     }
 
-    /**
-     * Извлекает и проверяет токен, возвращая аутентификационные данные.
-     *
-     * @param token токен авторизации в формате "Bearer ..."
-     * @return объект UsernamePasswordAuthenticationToken, если аутентификация успешна, или null, если неудачна
-     */
     private UsernamePasswordAuthenticationToken getAuthentication(String token) {
+        logger.info("Attempting to authenticate token");
         String user = Jwts.parserBuilder()
                 .setSigningKey(signingKey)
                 .build()
@@ -70,8 +84,10 @@ public class JwtAuthorizationFilter extends BasicAuthenticationFilter {
                 .getSubject();
 
         if (user != null) {
+            logger.info("Token authentication successful for user: {}", user);
             return new UsernamePasswordAuthenticationToken(user, null, new ArrayList<>());
         }
+        logger.warn("No user found in token");
         return null;
     }
 }

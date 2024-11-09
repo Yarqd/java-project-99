@@ -2,17 +2,18 @@ package hexlet.code.service;
 
 import hexlet.code.dto.UserCreateDTO;
 import hexlet.code.dto.UserResponseDTO;
+import hexlet.code.model.Role;
 import hexlet.code.model.User;
+import hexlet.code.repository.RoleRepository;
 import hexlet.code.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.GrantedAuthority;
-
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -22,26 +23,33 @@ public class UserService {
     private UserRepository userRepository;
 
     @Autowired
+    private RoleRepository roleRepository;
+
+    @Autowired
     private BCryptPasswordEncoder passwordEncoder;
 
     /**
-     * Создание нового пользователя на основе переданных данных.
+     * Создание нового пользователя с заданными ролями.
      *
      * @param userDTO данные для создания пользователя
+     * @param roleNames список имен ролей
      * @return данные о созданном пользователе в виде DTO
      */
     @Transactional
-    public UserResponseDTO createUser(UserCreateDTO userDTO) {
+    public UserResponseDTO createUserWithRoles(UserCreateDTO userDTO, List<String> roleNames) {
         User user = new User();
-
-        if (userDTO.getId() != null) {
-            user.setId(userDTO.getId());
-        }
-
         user.setEmail(userDTO.getEmail());
         user.setFirstName(userDTO.getFirstName());
         user.setLastName(userDTO.getLastName());
         user.setPassword(passwordEncoder.encode(userDTO.getPassword()));
+
+        Set<Role> roles = new HashSet<>();
+        for (String roleName : roleNames) {
+            Role role = roleRepository.findByName(roleName)
+                    .orElseGet(() -> roleRepository.save(new Role(roleName)));
+            roles.add(role);
+        }
+        user.setRoles(roles);
         userRepository.save(user);
         return convertToResponseDTO(user);
     }
@@ -82,16 +90,6 @@ public class UserService {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        // Получение ролей текущего пользователя
-        boolean isAdmin = SecurityContextHolder.getContext().getAuthentication().getAuthorities().stream()
-                .map(GrantedAuthority::getAuthority)
-                .anyMatch(role -> role.equals("ROLE_ADMIN"));
-
-        // Проверка прав: администратор или владелец учетной записи
-        if (!isAdmin && !user.getEmail().equals(currentUsername)) {
-            throw new RuntimeException("You are not allowed to update this user");
-        }
-
         // Обновление полей
         if (updates.containsKey("firstName")) {
             user.setFirstName((String) updates.get("firstName"));
@@ -105,20 +103,6 @@ public class UserService {
 
         userRepository.save(user);
         return convertToResponseDTO(user);
-    }
-
-
-    /**
-     * Удаление пользователя по его идентификатору.
-     *
-     * @param id идентификатор пользователя
-     */
-    @Transactional
-    public void deleteUser(Long id) {
-        if (!userRepository.existsById(id)) {
-            throw new RuntimeException("User not found");
-        }
-        userRepository.deleteById(id);
     }
 
     /**
