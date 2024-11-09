@@ -4,17 +4,26 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import hexlet.code.model.Label;
 import hexlet.code.model.Task;
 import hexlet.code.model.TaskStatus;
+import hexlet.code.model.User;
 import hexlet.code.repository.LabelRepository;
 import hexlet.code.repository.TaskRepository;
 import hexlet.code.repository.TaskStatusRepository;
+import hexlet.code.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 
+import java.util.HashMap;
+import java.util.Map;
+
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.hasSize;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -23,8 +32,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.hasSize;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -43,20 +50,52 @@ public class LabelControllerTest {
     private TaskStatusRepository taskStatusRepository;
 
     @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
     private ObjectMapper objectMapper;
 
+    @Autowired
+    private BCryptPasswordEncoder passwordEncoder;
+
+    private String jwtToken;
     private Label label;
 
     /**
      * Метод, который выполняется перед каждым тестом для инициализации необходимых данных.
-     * Очищает репозитории и создает новую метку для использования в тестах.
+     * Очищает репозитории, создает нового пользователя, получает JWT токен и создает метку.
      */
     @BeforeEach
-    public void setUp() {
+    public void setUp() throws Exception {
         taskRepository.deleteAll();
         taskStatusRepository.deleteAll();
         labelRepository.deleteAll();
+        userRepository.deleteAll();
 
+        // Создаем тестового пользователя
+        User testUser = new User();
+        testUser.setEmail("test@example.com");
+        testUser.setPassword(passwordEncoder.encode("password"));
+        testUser.setFirstName("Test");
+        testUser.setLastName("User");
+        userRepository.save(testUser);
+
+        // Получаем JWT токен
+        Map<String, String> loginData = new HashMap<>();
+        loginData.put("username", "test@example.com");
+        loginData.put("password", "password");
+
+        MvcResult result = mockMvc.perform(post("/api/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(loginData)))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        // Извлекаем токен из JSON-ответа
+        String responseBody = result.getResponse().getContentAsString();
+        jwtToken = "Bearer " + objectMapper.readTree(responseBody).get("token").asText();
+
+        // Создаем метку для тестов
         label = new Label("Bug");
         labelRepository.save(label);
     }
@@ -64,6 +103,7 @@ public class LabelControllerTest {
     @Test
     public void testGetLabelById() throws Exception {
         mockMvc.perform(get("/api/labels/" + label.getId())
+                        .header("Authorization", jwtToken)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(label.getId()))
@@ -73,6 +113,7 @@ public class LabelControllerTest {
     @Test
     public void testGetAllLabels() throws Exception {
         mockMvc.perform(get("/api/labels")
+                        .header("Authorization", jwtToken)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(1)))
@@ -84,6 +125,7 @@ public class LabelControllerTest {
         Label newLabel = new Label("Feature");
 
         mockMvc.perform(post("/api/labels")
+                        .header("Authorization", jwtToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(newLabel)))
                 .andExpect(status().isCreated())
@@ -99,6 +141,7 @@ public class LabelControllerTest {
         Label updatedLabel = new Label("Updated Bug");
 
         mockMvc.perform(put("/api/labels/" + label.getId())
+                        .header("Authorization", jwtToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(updatedLabel)))
                 .andExpect(status().isOk())
@@ -112,10 +155,12 @@ public class LabelControllerTest {
     @Test
     public void testDeleteLabel() throws Exception {
         mockMvc.perform(delete("/api/labels/" + label.getId())
+                        .header("Authorization", jwtToken)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNoContent());
 
         mockMvc.perform(get("/api/labels/" + label.getId())
+                        .header("Authorization", jwtToken)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound());
     }
@@ -135,6 +180,7 @@ public class LabelControllerTest {
         taskRepository.save(task);
 
         mockMvc.perform(delete("/api/labels/" + newLabel.getId())
+                        .header("Authorization", jwtToken)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest())
                 .andExpect(content().string(containsString("Нельзя удалить метку, она связана с задачами.")));

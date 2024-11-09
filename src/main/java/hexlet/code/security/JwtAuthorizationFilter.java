@@ -22,33 +22,47 @@ import java.util.ArrayList;
 
 public class JwtAuthorizationFilter extends BasicAuthenticationFilter {
 
-    private static final Logger logger = LoggerFactory.getLogger(JwtAuthorizationFilter.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(JwtAuthorizationFilter.class);
     private final Key signingKey;
     private final ObjectMapper objectMapper;
 
+    /**
+     * Конструктор JwtAuthorizationFilter.
+     *
+     * @param authManager менеджер аутентификации
+     * @param signingKey ключ для подписи JWT
+     * @param objectMapper объект для обработки JSON
+     */
     public JwtAuthorizationFilter(AuthenticationManager authManager, Key signingKey, ObjectMapper objectMapper) {
         super(authManager);
         this.signingKey = signingKey;
         this.objectMapper = objectMapper;
     }
 
+    /**
+     * Обрабатывает фильтрацию внутреннего запроса, извлекая и проверяя JWT-токен.
+     *
+     * @param request HTTP-запрос
+     * @param response HTTP-ответ
+     * @param chain цепочка фильтров
+     * @throws IOException если произошла ошибка ввода-вывода
+     * @throws ServletException если произошла ошибка сервлета
+     */
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
             throws IOException, ServletException {
         String header = request.getHeader("Authorization");
 
-        // Логируем полученный заголовок Authorization
-        logger.info("Received Authorization Header: {}", header);
+        LOGGER.info("Received Authorization Header: {}", header);
 
         if (header == null || !header.startsWith("Bearer ")) {
-            logger.warn("Authorization header is missing or does not start with Bearer");
+            LOGGER.warn("Authorization header is missing or does not start with Bearer");
             chain.doFilter(request, response);
             return;
         }
 
-        // Проверяем, если заголовок содержит '[object Object]', пытаемся преобразовать его
         if ("Bearer [object Object]".equals(header)) {
-            logger.warn("Received token in incorrect format '[object Object]'. Attempting to parse.");
+            LOGGER.warn("Received token in incorrect format '[object Object]'. Attempting to parse.");
             chain.doFilter(request, response);
             return;
         }
@@ -57,25 +71,31 @@ public class JwtAuthorizationFilter extends BasicAuthenticationFilter {
             UsernamePasswordAuthenticationToken authentication = getAuthentication(header);
             if (authentication != null) {
                 SecurityContextHolder.getContext().setAuthentication(authentication);
-                logger.info("User authenticated: {}", authentication.getName());
+                LOGGER.info("User authenticated: {}", authentication.getName());
             } else {
-                logger.warn("Authentication failed, no user found in token.");
+                LOGGER.warn("Authentication failed, no user found in token.");
             }
             chain.doFilter(request, response);
         } catch (MalformedJwtException | SignatureException e) {
-            logger.error("Invalid JWT token: {}", e.getMessage());
+            LOGGER.error("Invalid JWT token: {}", e.getMessage());
             response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid JWT token");
         } catch (ExpiredJwtException e) {
-            logger.warn("Expired JWT token: {}", e.getMessage());
+            LOGGER.warn("Expired JWT token: {}", e.getMessage());
             response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Expired JWT token");
         } catch (Exception e) {
-            logger.error("Failed to authenticate user: {}", e.getMessage());
+            LOGGER.error("Failed to authenticate user: {}", e.getMessage());
             response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Failed to authenticate");
         }
     }
 
+    /**
+     * Извлекает аутентификационные данные из токена JWT.
+     *
+     * @param token JWT-токен
+     * @return объект UsernamePasswordAuthenticationToken, если пользователь найден; иначе null
+     */
     private UsernamePasswordAuthenticationToken getAuthentication(String token) {
-        logger.info("Attempting to authenticate token");
+        LOGGER.info("Attempting to authenticate token");
         String user = Jwts.parserBuilder()
                 .setSigningKey(signingKey)
                 .build()
@@ -84,10 +104,10 @@ public class JwtAuthorizationFilter extends BasicAuthenticationFilter {
                 .getSubject();
 
         if (user != null) {
-            logger.info("Token authentication successful for user: {}", user);
+            LOGGER.info("Token authentication successful for user: {}", user);
             return new UsernamePasswordAuthenticationToken(user, null, new ArrayList<>());
         }
-        logger.warn("No user found in token");
+        LOGGER.warn("No user found in token");
         return null;
     }
 }

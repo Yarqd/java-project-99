@@ -23,6 +23,10 @@ import io.jsonwebtoken.security.Keys;
 import java.security.Key;
 import java.util.logging.Logger;
 
+/**
+ * Конфигурация безопасности для приложения, включающая настройку фильтров JWT, обработку аутентификации и управления
+ * сессиями.
+ */
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
@@ -32,41 +36,74 @@ public class SecurityConfig {
     private final UserDetailsServiceImpl userDetailsService;
     private final Key signingKey;
 
+    /**
+     * Конструктор, инициализирующий сервис пользователя и ключ для подписи JWT.
+     *
+     * @param userDetailsService сервис для управления данными пользователей
+     */
     public SecurityConfig(UserDetailsServiceImpl userDetailsService) {
         this.userDetailsService = userDetailsService;
-        // Генерируем надежный ключ для HS512
         this.signingKey = Keys.secretKeyFor(SignatureAlgorithm.HS512);
         LOGGER.info("Initialized signing key for JWT.");
     }
 
+    /**
+     * Определяет BCryptPasswordEncoder как механизм кодирования паролей.
+     *
+     * @return экземпляр BCryptPasswordEncoder
+     */
     @Bean
     public BCryptPasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
+    /**
+     * Определяет цепочку фильтров безопасности, включая настройку CSRF, политики сессий и фильтры аутентификации.
+     *
+     * @param http        объект конфигурации безопасности HTTP
+     * @param authManager менеджер аутентификации
+     * @return настроенный SecurityFilterChain
+     * @throws Exception в случае ошибки конфигурации
+     */
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http, AuthenticationManager authManager) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, AuthenticationManager authManager)
+            throws Exception {
         JwtAuthenticationFilter jwtAuthenticationFilter = new JwtAuthenticationFilter(authManager, signingKey);
-        JwtAuthorizationFilter jwtAuthorizationFilter = new JwtAuthorizationFilter(authManager, signingKey, new ObjectMapper());
+        JwtAuthorizationFilter jwtAuthorizationFilter = new JwtAuthorizationFilter(authManager, signingKey,
+                new ObjectMapper());
 
         return http
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/login", "/", "/index.html", "/assets/**", "/api/pages", "/api/pages/*", "/api/users").permitAll()
+                        .requestMatchers("/api/login", "/", "/index.html", "/assets/**", "/api/pages",
+                                "/api/pages/*", "/api/users", "/welcome").permitAll()  // Добавлено /welcome
                         .anyRequest().authenticated())
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(jwtAuthorizationFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();
     }
 
+    /**
+     * Настраивает менеджер аутентификации, используя сервис пользователей и кодировщик паролей.
+     *
+     * @param http объект конфигурации безопасности HTTP
+     * @return настроенный AuthenticationManager
+     * @throws Exception в случае ошибки конфигурации
+     */
     @Bean
     public AuthenticationManager authenticationManager(HttpSecurity http) throws Exception {
-        AuthenticationManagerBuilder authenticationManagerBuilder = http.getSharedObject(AuthenticationManagerBuilder.class);
+        AuthenticationManagerBuilder authenticationManagerBuilder = http.getSharedObject(
+                AuthenticationManagerBuilder.class);
         authenticationManagerBuilder.userDetailsService(userDetailsService).passwordEncoder(passwordEncoder());
         return authenticationManagerBuilder.build();
     }
 
+    /**
+     * Определяет DAO-провайдер аутентификации с использованием сервиса пользователя и кодировщика паролей.
+     *
+     * @return настроенный AuthenticationProvider
+     */
     @Bean
     public AuthenticationProvider daoAuthProvider() {
         DaoAuthenticationProvider provider = new DaoAuthenticationProvider();

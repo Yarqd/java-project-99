@@ -3,7 +3,9 @@ package hexlet.code.integration;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import hexlet.code.model.TaskStatus;
+import hexlet.code.model.User;
 import hexlet.code.repository.TaskStatusRepository;
+import hexlet.code.repository.UserRepository;
 import hexlet.code.utils.TestUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -11,15 +13,18 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 
 import java.util.HashMap;
+import java.util.Map;
 
 import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -32,33 +37,60 @@ public class TaskStatusUpdateTest {
     private TaskStatusRepository taskStatusRepository;
 
     @Autowired
-    private ObjectMapper objectMapper;  // Используем инжекцию
+    private UserRepository userRepository;
 
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    @Autowired
+    private BCryptPasswordEncoder passwordEncoder;
+
+    private TestUtils testUtils;
+    private String jwtToken;
     private TaskStatus taskStatus;
 
     /**
-     * Метод, который выполняется перед каждым тестом, для очистки репозитория
-     * и инициализации объекта UserCreateDTO для использования в тестах.
+     * Метод, который выполняется перед каждым тестом для инициализации необходимых данных.
+     * Очищает репозитории, создает нового пользователя, получает JWT токен и создает метку.
      */
     @BeforeEach
-    public void setUp() {
+    public void setUp() throws Exception {
         objectMapper.registerModule(new JavaTimeModule());
+        testUtils = new TestUtils(objectMapper);
+
         taskStatusRepository.deleteAll();
+        userRepository.deleteAll();
+
+        // Создаем тестового пользователя и получаем JWT токен
+        User user = new User();
+        user.setEmail("testuser@example.com");
+        user.setPassword(passwordEncoder.encode("password"));
+        userRepository.save(user);
+
+        Map<String, String> loginData = new HashMap<>();
+        loginData.put("username", "testuser@example.com");
+        loginData.put("password", "password");
+
+        MvcResult result = mockMvc.perform(post("/api/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(loginData)))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        String responseBody = result.getResponse().getContentAsString();
+        jwtToken = "Bearer " + objectMapper.readTree(responseBody).get("token").asText();
 
         // Инициализация TaskStatus
         taskStatus = new TaskStatus("Initial Name", "initial-slug");
 
-        // Передаем инжектированный ObjectMapper в TestUtils
-        new TestUtils(objectMapper);
+        // Сохраняем TaskStatus через TestUtils с jwtToken
+        testUtils.saveTaskStatus(mockMvc, taskStatus, jwtToken);
     }
 
     @Test
     public void testUpdateTaskStatusName() throws Exception {
-        // Сохраняем TaskStatus через TestUtils
-        TestUtils.saveTaskStatus(mockMvc, taskStatus);
-
         // Получаем сохранённый TaskStatus
-        var status = TestUtils.getStatusByName(mockMvc, taskStatus.getName());
+        var status = testUtils.getStatusByName(mockMvc, taskStatus.getName(), jwtToken);
 
         // Данные для обновления
         var data = new HashMap<String, String>();
@@ -66,7 +98,7 @@ public class TaskStatusUpdateTest {
 
         // Выполняем запрос на обновление
         var request = put("/api/task_statuses/{id}", status.getId())
-                .with(jwt())
+                .header("Authorization", jwtToken)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(data));
 
@@ -82,7 +114,7 @@ public class TaskStatusUpdateTest {
         );
 
         // Проверка обновлённых данных в базе
-        var actualStatus = TestUtils.getStatusByName(mockMvc, data.get("name"));
+        var actualStatus = testUtils.getStatusByName(mockMvc, data.get("name"), jwtToken);
         assertEquals(data.get("name"), actualStatus.getName());
         assertEquals(taskStatus.getSlug(), actualStatus.getSlug());
     }

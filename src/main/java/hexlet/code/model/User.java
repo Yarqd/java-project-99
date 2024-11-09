@@ -1,6 +1,17 @@
 package hexlet.code.model;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
+import jakarta.persistence.Table;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Size;
 
@@ -14,7 +25,7 @@ import java.util.Set;
  */
 @Entity
 @Table(name = "users")
-public class User {
+public final class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -69,68 +80,146 @@ public class User {
     public User() {
     }
 
-    // Геттеры и сеттеры для всех полей, включая роли
-
+    /**
+     * Возвращает идентификатор пользователя.
+     *
+     * @return id пользователя
+     */
     public Long getId() {
         return id;
     }
 
+    /**
+     * Устанавливает идентификатор пользователя.
+     *
+     * @param id идентификатор пользователя
+     */
     public void setId(Long id) {
         this.id = id;
     }
 
+    /**
+     * Возвращает имя пользователя.
+     *
+     * @return имя пользователя
+     */
     public String getFirstName() {
         return firstName;
     }
 
+    /**
+     * Устанавливает имя пользователя.
+     *
+     * @param firstName имя пользователя
+     */
     public void setFirstName(String firstName) {
         this.firstName = firstName;
     }
 
+    /**
+     * Возвращает фамилию пользователя.
+     *
+     * @return фамилия пользователя
+     */
     public String getLastName() {
         return lastName;
     }
 
+    /**
+     * Устанавливает фамилию пользователя.
+     *
+     * @param lastName фамилия пользователя
+     */
     public void setLastName(String lastName) {
         this.lastName = lastName;
     }
 
+    /**
+     * Возвращает email пользователя.
+     *
+     * @return email пользователя
+     */
     public String getEmail() {
         return email;
     }
 
+    /**
+     * Устанавливает email пользователя.
+     *
+     * @param email email пользователя
+     */
     public void setEmail(String email) {
         this.email = email;
     }
 
+    /**
+     * Возвращает пароль пользователя.
+     *
+     * @return пароль пользователя
+     */
     public String getPassword() {
         return password;
     }
 
+    /**
+     * Устанавливает пароль пользователя.
+     *
+     * @param password пароль пользователя
+     */
     public void setPassword(String password) {
         this.password = password;
     }
 
+    /**
+     * Возвращает дату создания записи пользователя.
+     *
+     * @return дата создания записи
+     */
     public Instant getCreatedAt() {
         return createdAt;
     }
 
+    /**
+     * Устанавливает дату создания записи пользователя.
+     *
+     * @param createdAt дата создания записи
+     */
     public void setCreatedAt(Instant createdAt) {
         this.createdAt = createdAt;
     }
 
+    /**
+     * Возвращает дату последнего обновления записи пользователя.
+     *
+     * @return дата последнего обновления
+     */
     public Instant getUpdatedAt() {
         return updatedAt;
     }
 
+    /**
+     * Устанавливает дату последнего обновления записи пользователя.
+     *
+     * @param updatedAt дата последнего обновления
+     */
     public void setUpdatedAt(Instant updatedAt) {
         this.updatedAt = updatedAt;
     }
 
+    /**
+     * Возвращает набор ролей пользователя.
+     *
+     * @return набор ролей пользователя
+     */
     public Set<Role> getRoles() {
         return roles;
     }
 
+    /**
+     * Устанавливает набор ролей пользователя.
+     *
+     * @param roles набор ролей пользователя
+     */
     public void setRoles(Set<Role> roles) {
         this.roles = roles;
     }

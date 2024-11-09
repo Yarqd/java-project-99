@@ -7,12 +7,24 @@ import hexlet.code.service.TaskStatusService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
+/**
+ * Контроллер для работы с задачами (Tasks).
+ * Предоставляет методы для получения, создания, обновления и удаления задач.
+ */
 @RestController
 @RequestMapping("/api/tasks")
 public class TaskController {
@@ -25,6 +37,15 @@ public class TaskController {
     @Autowired
     private TaskStatusService taskStatusService;
 
+    /**
+     * Получает список задач с возможностью фильтрации.
+     *
+     * @param titleCont  часть названия задачи для поиска
+     * @param assigneeId ID исполнителя задачи
+     * @param status     статус задачи
+     * @param labelId    ID метки задачи
+     * @return список задач, соответствующих фильтрам
+     */
     @GetMapping
     @PreAuthorize("isAuthenticated()")
     public List<Task> getTasks(
@@ -39,6 +60,12 @@ public class TaskController {
         return tasks;
     }
 
+    /**
+     * Получает задачу по ее идентификатору.
+     *
+     * @param id идентификатор задачи
+     * @return объект задачи или статус 404, если задача не найдена
+     */
     @GetMapping("/{id}")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Task> getTaskById(@PathVariable Long id) {
@@ -54,6 +81,12 @@ public class TaskController {
                 });
     }
 
+    /**
+     * Создает новую задачу.
+     *
+     * @param task объект задачи для создания
+     * @return созданная задача с кодом состояния 201 или сообщение об ошибке
+     */
     @PostMapping
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Object> createTask(@RequestBody Task task) {
@@ -83,6 +116,13 @@ public class TaskController {
         return ResponseEntity.status(201).body(createdTask);
     }
 
+    /**
+     * Обновляет существующую задачу.
+     *
+     * @param id          идентификатор задачи
+     * @param updatedTask обновленные данные задачи
+     * @return обновленная задача или статус 404, если задача не найдена
+     */
     @PutMapping("/{id}")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Task> updateTask(@PathVariable Long id, @RequestBody Task updatedTask) {
@@ -104,6 +144,12 @@ public class TaskController {
                 });
     }
 
+    /**
+     * Удаляет задачу по ее идентификатору.
+     *
+     * @param id идентификатор задачи
+     * @return статус 204, если задача удалена, или 404, если задача не найдена
+     */
     @DeleteMapping("/{id}")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Object> deleteTask(@PathVariable Long id) {

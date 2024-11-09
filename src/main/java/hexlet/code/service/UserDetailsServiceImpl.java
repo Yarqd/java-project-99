@@ -9,6 +9,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
+
 import java.util.stream.Collectors;
 
 @Service
@@ -17,6 +18,13 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     @Autowired
     private UserRepository userRepository;
 
+    /**
+     * Загружает пользователя по его email.
+     *
+     * @param email email пользователя, для которого необходимо загрузить данные.
+     * @return объект UserDetails, содержащий данные пользователя для аутентификации.
+     * @throws UsernameNotFoundException если пользователь с указанным email не найден.
+     */
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
         User user = userRepository.findByEmail(email)

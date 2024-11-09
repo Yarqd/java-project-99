@@ -21,16 +21,30 @@ import java.util.Date;
 
 public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 
-    private static final Logger logger = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
     private final AuthenticationManager authenticationManager;
     private final Key signingKey;
 
+    /**
+     * Конструктор JwtAuthenticationFilter.
+     *
+     * @param authenticationManager менеджер аутентификации
+     * @param signingKey ключ для подписи JWT
+     */
     public JwtAuthenticationFilter(AuthenticationManager authenticationManager, Key signingKey) {
         this.authenticationManager = authenticationManager;
         this.signingKey = signingKey;
         setFilterProcessesUrl("/api/login");
     }
 
+    /**
+     * Попытка аутентификации пользователя с использованием предоставленных данных.
+     *
+     * @param request  запрос, содержащий данные пользователя
+     * @param response ответ для обработки
+     * @return объект Authentication после успешной аутентификации
+     * @throws AuthenticationException если аутентификация не удалась
+     */
     @Override
     public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response)
             throws AuthenticationException {
@@ -41,11 +55,20 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
                     new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword());
             return authenticationManager.authenticate(authenticationToken);
         } catch (IOException e) {
-            logger.error("Authentication failed: {}", e.getMessage());
+            LOGGER.error("Authentication failed: {}", e.getMessage());
             throw new RuntimeException(e);
         }
     }
 
+    /**
+     * Обработка успешной аутентификации пользователя.
+     *
+     * @param request    запрос пользователя
+     * @param response   ответ сервера
+     * @param chain      цепочка фильтров
+     * @param authResult результат аутентификации
+     * @throws IOException если возникла ошибка ввода-вывода
+     */
     @Override
     protected final void successfulAuthentication(HttpServletRequest request, HttpServletResponse response,
                                                   FilterChain chain, Authentication authResult) throws IOException {
@@ -60,9 +83,12 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
         response.setCharacterEncoding("UTF-8");
         response.getWriter().write("{\"token\": \"" + token + "\"}");
 
-        logger.info("User {} authenticated successfully", authResult.getName());
+        LOGGER.info("User {} authenticated successfully", authResult.getName());
     }
 
+    /**
+     * Вспомогательный класс для хранения данных запроса на аутентификацию.
+     */
     static class UserLoginRequest {
         private String username;
         private String password;
