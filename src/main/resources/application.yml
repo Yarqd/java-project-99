@@ -1,52 +1,6 @@
 spring:
   application:
-    name: app  # Имя приложения
-
-  profiles:
-    active: dev  # Используйте 'prod' для продакшен окружения через переменные окружения
-
-# Конфигурация для профиля "dev" (H2 Database)
----
-spring:
-  config:
-    activate:
-      on-profile: dev
-  datasource:
-    url: jdbc:h2:mem:devdb
-    driver-class-name: org.h2.Driver
-    username: sa
-    password:  # Оставьте пустым для H2
-    schema: classpath:db/schema.sql
-  h2:
-    console:
-      enabled: true
-      path: /h2-console
-  jpa:
-    hibernate:
-      ddl-auto: create
-    show-sql: true
-    open-in-view: false  # Отключить open-in-view
-  sentry:
-    dsn: ${SENTRY_DSN_DEV}  # Переменная окружения для dev профиля
-
-# Конфигурация для профиля "prod" (PostgreSQL)
----
-spring:
-  config:
-    activate:
-      on-profile: prod
-  datasource:
-    url: ${DATABASE_URL}  # URL базы данных через переменную окружения
-    driver-class-name: org.postgresql.Driver
-    username: ${DATABASE_USERNAME}  # Имя пользователя через переменную окружения
-    password: ${DATABASE_PASSWORD}  # Пароль через переменную окружения
-  jpa:
-    hibernate:
-      ddl-auto: update  # Или "validate", если вы не хотите автоматически изменять схему
-    show-sql: true
-    open-in-view: false  # Отключить open-in-view
-  sentry:
-    dsn: ${SENTRY_DSN_PROD}  # Переменная окружения для prod профиля
+    name: app
 
 logging:
   level:
