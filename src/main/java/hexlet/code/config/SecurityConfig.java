@@ -44,7 +44,7 @@ public class SecurityConfig {
                 .csrf().disable()
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/login", "/api/pages/*", "/api/pages", "/",
-                                "/index.html", "/assets/**").permitAll()
+                                "/index.html", "/assets/**", "/welcome").permitAll() // разрешаем доступ к /welcome
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
