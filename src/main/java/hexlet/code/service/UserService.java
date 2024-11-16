@@ -93,7 +93,17 @@ public class UserService {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
+        // Проверяем права доступа
+        if (!currentUsername.equals(user.getEmail()) && !isAdmin(currentUsername)) {
+            // Логируем проблему или бросаем RuntimeException
+            System.err.println("Access denied for user: " + currentUsername);
+            throw new RuntimeException("Access denied. You don't have permission to update this user");
+        }
+
         // Обновление полей
+        if (updates.containsKey("email")) {
+            user.setEmail((String) updates.get("email"));
+        }
         if (updates.containsKey("firstName")) {
             user.setFirstName((String) updates.get("firstName"));
         }
@@ -107,6 +117,7 @@ public class UserService {
         userRepository.save(user);
         return convertToResponseDTO(user);
     }
+
 
     /**
      * Преобразование сущности пользователя в DTO.
