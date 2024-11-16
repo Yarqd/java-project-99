@@ -6,10 +6,13 @@ import hexlet.code.model.Role;
 import hexlet.code.model.User;
 import hexlet.code.repository.RoleRepository;
 import hexlet.code.repository.UserRepository;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.nio.file.AccessDeniedException;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -120,4 +123,36 @@ public class UserService {
         responseDTO.setCreatedAt(user.getCreatedAt());
         return responseDTO;
     }
+
+    /**
+     * Удаление пользователя.
+     * @param id - id пользователя
+     * @param currentUsername - имя пользователя
+     */
+    @Transactional
+    public void deleteUser(Long id, String currentUsername) throws AccessDeniedException {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("User not found"));
+
+        // Проверяем, что текущий пользователь имеет права на удаление
+        if (!currentUsername.equals(user.getEmail()) && !isAdmin(currentUsername)) {
+            throw new AccessDeniedException("You don't have permission to delete this user");
+        }
+
+        userRepository.delete(user);
+    }
+
+    /**
+     * Проверяет, является ли пользователь с указанным email администратором.
+     *
+     * @param email email пользователя
+     * @return true, если пользователь является администратором
+     */
+    private boolean isAdmin(String email) {
+        return userRepository.findByEmail(email)
+                .map(user -> user.getRoles().stream()
+                        .anyMatch(role -> role.getName().equalsIgnoreCase("ADMIN")))
+                .orElse(false);
+    }
+
 }

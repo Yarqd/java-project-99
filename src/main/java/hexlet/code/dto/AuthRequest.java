@@ -1,26 +1,31 @@
 package hexlet.code.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 /**
  * DTO для передачи данных аутентификации.
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 public final class AuthRequest {
 
     private String username;
     private String password;
+    private String firstName; // Добавлено поле firstName
+    private String lastName; // Добавлено поле lastName
 
     /**
-     * Возвращает имя пользователя.
+     * Возвращает username пользователя.
      *
-     * @return имя пользователя.
+     * @return username пользователя.
      */
     public String getUsername() {
         return username;
     }
 
     /**
-     * Устанавливает имя пользователя.
+     * Устанавливает username пользователя.
      *
-     * @param username имя пользователя.
+     * @param username username пользователя.
      */
     public void setUsername(String username) {
         this.username = username;
@@ -42,5 +47,41 @@ public final class AuthRequest {
      */
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    /**
+     * Возвращает имя пользователя.
+     *
+     * @return имя пользователя.
+     */
+    public String getFirstName() {
+        return firstName;
+    }
+
+    /**
+     * Устанавливает имя пользователя.
+     *
+     * @param firstName имя пользователя.
+     */
+    public void setFirstName(String firstName) {
+        this.firstName = firstName;
+    }
+
+    /**
+     * Возвращает фамилию пользователя.
+     *
+     * @return фамилия пользователя.
+     */
+    public String getLastName() {
+        return lastName;
+    }
+
+    /**
+     * Устанавливает фамилию пользователя.
+     *
+     * @param lastName фамилия пользователя.
+     */
+    public void setLastName(String lastName) {
+        this.lastName = lastName;
     }
 }

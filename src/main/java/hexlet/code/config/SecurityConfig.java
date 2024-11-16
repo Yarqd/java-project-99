@@ -41,7 +41,7 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
-                .csrf().disable()
+                .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/login", "/api/pages/*", "/api/pages", "/",
                                 "/index.html", "/assets/**", "/welcome").permitAll() // разрешаем доступ к /welcome

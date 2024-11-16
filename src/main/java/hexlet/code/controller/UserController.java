@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -15,12 +16,13 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.nio.file.AccessDeniedException;
 import java.util.List;
 import java.util.Map;
 
 /**
  * Контроллер для управления пользователями.
- * Предоставляет эндпоинты для создания, получения и обновления пользователей.
+ * Предоставляет эндпоинты для создания, получения, обновления и удаления пользователей.
  */
 @RestController
 @RequestMapping("/api/users")
@@ -82,5 +84,21 @@ public final class UserController {
         UserResponseDTO updatedUser = userService.updateUser(id, updates, currentUsername);
 
         return new ResponseEntity<>(updatedUser, HttpStatus.OK);
+    }
+
+    /**
+     * Удаление пользователя по его идентификатору.
+     *
+     * @param id идентификатор пользователя
+     * @param authentication аутентификация текущего пользователя
+     * @return статус 204 (No Content) в случае успешного удаления
+     * @throws AccessDeniedException если текущий пользователь не имеет прав на удаление
+     */
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteUser(@PathVariable Long id, Authentication authentication)
+            throws AccessDeniedException {
+        String currentUsername = authentication.getName();
+        userService.deleteUser(id, currentUsername);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 }
