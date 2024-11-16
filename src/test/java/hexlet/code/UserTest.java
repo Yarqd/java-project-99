@@ -148,7 +148,7 @@ public final class UserTest {
     @Order(5)
     @Test
     void testDelete() throws Exception {
-        var userId = 1; // ID тестового пользователя
+        var userId = 2; // ID тестового пользователя
         mockMvc.perform(delete("/api/users/{id}", userId)
                         .header("Authorization", jwtToken))
                 .andExpect(status().isNoContent());
