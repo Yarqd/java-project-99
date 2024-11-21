@@ -4,7 +4,6 @@ import hexlet.code.dto.UserCreateDTO;
 import hexlet.code.dto.UserResponseDTO;
 import hexlet.code.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -15,90 +14,65 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.nio.file.AccessDeniedException;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Контроллер для управления пользователями.
- * Предоставляет эндпоинты для создания, получения, обновления и удаления пользователей.
- */
 @RestController
 @RequestMapping("/api/users")
 public final class UserController {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(UserController.class);
+
     @Autowired
     private UserService userService;
 
-    /**
-     * Создание нового пользователя с дефолтной ролью "USER".
-     *
-     * @param userCreateDTO DTO с данными для создания пользователя
-     * @return созданный пользователь и статус 201 (Created)
-     */
     @PostMapping
     public ResponseEntity<UserResponseDTO> createUser(@RequestBody UserCreateDTO userCreateDTO) {
+        LOGGER.info("Creating new user: {}", userCreateDTO.getEmail());
         UserResponseDTO user = userService.createUserWithRoles(userCreateDTO, List.of("USER"));
-        return new ResponseEntity<>(user, HttpStatus.CREATED);
+        LOGGER.info("User created successfully: {}", user);
+        return ResponseEntity.status(201).body(user);
     }
 
-    /**
-     * Получение списка всех пользователей.
-     *
-     * @return список пользователей и статус 200 (OK)
-     */
     @GetMapping
     public ResponseEntity<List<UserResponseDTO>> getAllUsers() {
+        LOGGER.info("Fetching all users");
         List<UserResponseDTO> users = userService.getAllUsers();
-        return new ResponseEntity<>(users, HttpStatus.OK);
+        LOGGER.info("Found {} users", users.size());
+        return ResponseEntity.ok()
+                .header("X-Total-Count", String.valueOf(users.size()))
+                .body(users);
     }
 
-    /**
-     * Получение пользователя по его идентификатору.
-     *
-     * @param id идентификатор пользователя
-     * @return данные о пользователе и статус 200 (OK)
-     */
     @GetMapping("/{id}")
     public ResponseEntity<UserResponseDTO> getUserById(@PathVariable Long id) {
+        LOGGER.info("Fetching user by ID: {}", id);
         UserResponseDTO user = userService.getUserById(id);
-        return new ResponseEntity<>(user, HttpStatus.OK);
+        return ResponseEntity.ok(user);
     }
 
-    /**
-     * Обновление данных пользователя.
-     *
-     * @param id идентификатор пользователя
-     * @param updates карта с изменяемыми данными пользователя
-     * @param authentication аутентификация текущего пользователя
-     * @return обновленный пользователь и статус 200 (OK)
-     */
     @PutMapping("/{id}")
     public ResponseEntity<UserResponseDTO> updateUser(
             @PathVariable Long id,
             @RequestBody Map<String, Object> updates,
             Authentication authentication) {
-
         String currentUsername = authentication.getName();
+        LOGGER.info("Updating user with ID: {} by {}", id, currentUsername);
         UserResponseDTO updatedUser = userService.updateUser(id, updates, currentUsername);
-
-        return new ResponseEntity<>(updatedUser, HttpStatus.OK);
+        LOGGER.info("User updated successfully: {}", updatedUser);
+        return ResponseEntity.ok(updatedUser);
     }
 
-    /**
-     * Удаление пользователя по его идентификатору.
-     *
-     * @param id идентификатор пользователя
-     * @param authentication аутентификация текущего пользователя
-     * @return статус 204 (No Content) в случае успешного удаления
-     * @throws AccessDeniedException если текущий пользователь не имеет прав на удаление
-     */
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteUser(@PathVariable Long id, Authentication authentication)
             throws AccessDeniedException {
         String currentUsername = authentication.getName();
+        LOGGER.info("Deleting user with ID: {} by {}", id, currentUsername);
         userService.deleteUser(id, currentUsername);
-        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        return ResponseEntity.noContent().build();
     }
 }

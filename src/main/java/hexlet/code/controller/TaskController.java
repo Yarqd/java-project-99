@@ -7,14 +7,13 @@ import hexlet.code.service.TaskStatusService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,7 +22,6 @@ import java.util.List;
 
 /**
  * Контроллер для работы с задачами (Tasks).
- * Предоставляет методы для получения, создания, обновления и удаления задач.
  */
 @RestController
 @RequestMapping("/api/tasks")
@@ -38,43 +36,33 @@ public class TaskController {
     private TaskStatusService taskStatusService;
 
     /**
-     * Получает список задач с возможностью фильтрации.
+     * Получает список задач с заголовком X-Total-Count для фронтенда.
      *
-     * @param titleCont  часть названия задачи для поиска
-     * @param assigneeId ID исполнителя задачи
-     * @param status     статус задачи
-     * @param labelId    ID метки задачи
-     * @return список задач, соответствующих фильтрам
+     * @return список задач с заголовком для пагинации
      */
     @GetMapping
     @PreAuthorize("isAuthenticated()")
-    public List<Task> getTasks(
-            @RequestParam(required = false) String titleCont,
-            @RequestParam(required = false) Long assigneeId,
-            @RequestParam(required = false) String status,
-            @RequestParam(required = false) Long labelId) {
-        LOGGER.info("Fetching tasks with filters - Title: {}, Assignee ID: {}, Status: {}, Label ID: {}",
-                titleCont, assigneeId, status, labelId);
-        List<Task> tasks = taskRepository.findTasksByFilters(titleCont, assigneeId, status, labelId);
-        LOGGER.info("Found {} tasks matching the filters", tasks.size());
-        return tasks;
+    public ResponseEntity<List<Task>> getTasks() {
+        LOGGER.info("Fetching all tasks");
+        List<Task> tasks = taskRepository.findAll();
+
+        return ResponseEntity.ok()
+                .header("X-Total-Count", String.valueOf(tasks.size()))
+                .body(tasks);
     }
 
     /**
      * Получает задачу по ее идентификатору.
      *
      * @param id идентификатор задачи
-     * @return объект задачи или статус 404, если задача не найдена
+     * @return задача или статус 404
      */
     @GetMapping("/{id}")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Task> getTaskById(@PathVariable Long id) {
         LOGGER.info("Fetching task with ID: {}", id);
         return taskRepository.findById(id)
-                .map(task -> {
-                    LOGGER.info("Task found: {}", task);
-                    return ResponseEntity.ok(task);
-                })
+                .map(ResponseEntity::ok)
                 .orElseGet(() -> {
                     LOGGER.warn("Task with ID: {} not found", id);
                     return ResponseEntity.notFound().build();
@@ -85,20 +73,16 @@ public class TaskController {
      * Создает новую задачу.
      *
      * @param task объект задачи для создания
-     * @return созданная задача с кодом состояния 201 или сообщение об ошибке
+     * @return созданная задача с кодом состояния 201
      */
     @PostMapping
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Object> createTask(@RequestBody Task task) {
-        LOGGER.info("Received POST request to create Task: {}", task);
+        LOGGER.info("Creating new task: {}", task);
 
         if (task.getName() == null || task.getName().isEmpty()) {
             LOGGER.error("Task name is required");
             return ResponseEntity.badRequest().body("Task name is required");
-        }
-        if (task.getDescription() == null || task.getDescription().isEmpty()) {
-            LOGGER.error("Task description is required");
-            return ResponseEntity.badRequest().body("Task description is required");
         }
 
         if (task.getTaskStatus() == null) {
@@ -108,7 +92,7 @@ public class TaskController {
                 return ResponseEntity.badRequest().body("Default TaskStatus is not available");
             }
             task.setTaskStatus(defaultStatus);
-            LOGGER.info("Setting default status for task: {}", defaultStatus);
+            LOGGER.info("Setting default TaskStatus: {}", defaultStatus);
         }
 
         Task createdTask = taskRepository.save(task);
@@ -121,15 +105,14 @@ public class TaskController {
      *
      * @param id          идентификатор задачи
      * @param updatedTask обновленные данные задачи
-     * @return обновленная задача или статус 404, если задача не найдена
+     * @return обновленная задача или статус 404
      */
     @PutMapping("/{id}")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Task> updateTask(@PathVariable Long id, @RequestBody Task updatedTask) {
-        LOGGER.info("Received PUT request to update Task with ID: {}", id);
+        LOGGER.info("Updating task with ID: {}", id);
         return taskRepository.findById(id)
                 .map(task -> {
-                    LOGGER.info("Task found: {}", task);
                     task.setName(updatedTask.getName());
                     task.setDescription(updatedTask.getDescription());
                     task.setTaskStatus(updatedTask.getTaskStatus());
@@ -148,12 +131,12 @@ public class TaskController {
      * Удаляет задачу по ее идентификатору.
      *
      * @param id идентификатор задачи
-     * @return статус 204, если задача удалена, или 404, если задача не найдена
+     * @return статус 204 или 404
      */
     @DeleteMapping("/{id}")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Object> deleteTask(@PathVariable Long id) {
-        LOGGER.info("Received DELETE request to remove Task with ID: {}", id);
+        LOGGER.info("Deleting task with ID: {}", id);
         return taskRepository.findById(id)
                 .map(task -> {
                     taskRepository.delete(task);

@@ -3,9 +3,9 @@ package hexlet.code.controller;
 import hexlet.code.dto.TaskStatusUpdateDto;
 import hexlet.code.model.TaskStatus;
 import hexlet.code.service.TaskStatusService;
+import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -16,15 +16,13 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import jakarta.validation.Valid;
 import java.util.List;
-import java.util.Locale;
 
 /**
  * Контроллер для управления статусами задач (TaskStatus).
- * Предоставляет методы для создания, обновления, удаления и получения статусов задач.
  */
 @RestController
 @RequestMapping("/api/task_statuses")
@@ -32,112 +30,131 @@ public class TaskStatusController {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(TaskStatusController.class);
 
-    @Autowired
-    private TaskStatusService taskStatusService;
+    private final TaskStatusService taskStatusService;
 
     /**
-     * Получает список всех статусов задач.
+     * Конструктор для внедрения зависимости TaskStatusService.
      *
+     * @param taskStatusService сервис для управления статусами задач
+     */
+    public TaskStatusController(TaskStatusService taskStatusService) {
+        this.taskStatusService = taskStatusService;
+    }
+
+    /**
+     * Получение всех статусов задач с заголовком X-Total-Count для фронтенда.
+     *
+     * @param name фильтр по имени статуса задачи (опционально)
      * @return список статусов задач
      */
     @GetMapping
     @PreAuthorize("isAuthenticated()")
-    public List<TaskStatus> getAllTaskStatuses() {
-        LOGGER.info("Fetching all task statuses.");
-        return taskStatusService.getAllTaskStatuses();
+    public final ResponseEntity<List<TaskStatus>> getAllTaskStatuses(
+            @RequestParam(value = "name", required = false) String name) {
+        LOGGER.info("Fetching all task statuses");
+        List<TaskStatus> taskStatuses = taskStatusService.getAllTaskStatuses();
+
+        if (name != null) {
+            taskStatuses = taskStatuses.stream()
+                    .filter(status -> name.equals(status.getName()))
+                    .toList();
+        }
+
+        return ResponseEntity.ok()
+                .header("X-Total-Count", String.valueOf(taskStatuses.size()))
+                .body(taskStatuses);
     }
 
     /**
-     * Получает статус задачи по его идентификатору.
+     * Получение статуса задачи по ID.
      *
      * @param id идентификатор статуса задачи
-     * @return объект TaskStatus
+     * @return статус задачи или 404, если не найден
      */
     @GetMapping("/{id}")
     @PreAuthorize("isAuthenticated()")
-    public TaskStatus getTaskStatusById(@PathVariable Long id) {
-        LOGGER.info("Fetching task status with id: {}", id);
-        return taskStatusService.getTaskStatusById(id);
+    public final ResponseEntity<TaskStatus> getTaskStatusById(@PathVariable Long id) {
+        LOGGER.info("Fetching task status with ID: {}", id);
+        TaskStatus taskStatus = taskStatusService.getTaskStatusById(id);
+        return ResponseEntity.ok(taskStatus);
     }
 
     /**
-     * Создает новый статус задачи.
+     * Создание нового статуса задачи.
      *
-     * @param taskStatus объект TaskStatus для создания
-     * @return созданный объект TaskStatus
+     * @param taskStatus объект статуса задачи
+     * @return созданный статус задачи с кодом 201
      */
     @PostMapping
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<TaskStatus> createTaskStatus(@Valid @RequestBody TaskStatus taskStatus) {
-        LOGGER.info("Received POST request to create TaskStatus: {}", taskStatus);
-
-        if (taskStatus.getName() == null || taskStatus.getName().isEmpty()) {
-            taskStatus.setName("Default Name " + System.currentTimeMillis());
-        }
-
-        if (taskStatus.getSlug() == null || taskStatus.getSlug().isEmpty()) {
-            taskStatus.setSlug(taskStatus.getName().toLowerCase(Locale.ROOT).replaceAll("\\s+", "-"));
-        }
-
+    public final ResponseEntity<TaskStatus> createTaskStatus(@RequestBody TaskStatus taskStatus) {
+        LOGGER.info("Creating task status: {}", taskStatus);
         TaskStatus createdTaskStatus = taskStatusService.createTaskStatus(taskStatus);
         return ResponseEntity.status(201).body(createdTaskStatus);
     }
 
     /**
-     * Обновляет существующий статус задачи.
+     * Полное обновление статуса задачи.
      *
-     * @param id         идентификатор статуса задачи
-     * @param taskStatus обновленные данные TaskStatus
-     * @return обновленный объект TaskStatus
+     * @param id идентификатор статуса задачи
+     * @param updatedTaskStatus объект с обновленными данными статуса задачи
+     * @return обновленный статус задачи или 404, если не найден
      */
     @PutMapping("/{id}")
     @PreAuthorize("isAuthenticated()")
-    public TaskStatus updateTaskStatus(@PathVariable Long id, @Valid @RequestBody TaskStatus taskStatus) {
-        LOGGER.info("Updating task status with id: {}, data: {}", id, taskStatus);
+    public final ResponseEntity<TaskStatus> updateTaskStatus(
+            @PathVariable Long id,
+            @Valid @RequestBody TaskStatus updatedTaskStatus) {
+        LOGGER.info("Updating task status with id: {}, data: {}", id, updatedTaskStatus);
 
         TaskStatus existingTaskStatus = taskStatusService.getTaskStatusById(id);
 
-        if (taskStatus.getName() == null || taskStatus.getName().isEmpty()) {
-            taskStatus.setName(existingTaskStatus.getName());
+        if (updatedTaskStatus.getName() != null && !updatedTaskStatus.getName().isEmpty()) {
+            existingTaskStatus.setName(updatedTaskStatus.getName());
         }
 
-        if (taskStatus.getSlug() == null || taskStatus.getSlug().isEmpty()) {
-            taskStatus.setSlug(existingTaskStatus.getSlug());
+        if (updatedTaskStatus.getSlug() != null && !updatedTaskStatus.getSlug().isEmpty()) {
+            existingTaskStatus.setSlug(updatedTaskStatus.getSlug());
+        } else {
+            LOGGER.info("Slug is not provided, keeping the current value: {}", existingTaskStatus.getSlug());
         }
 
-        return taskStatusService.updateTaskStatus(id, taskStatus);
+        TaskStatus savedTaskStatus = taskStatusService.updateTaskStatus(id, existingTaskStatus);
+        return ResponseEntity.ok(savedTaskStatus);
     }
 
     /**
      * Частичное обновление статуса задачи.
      *
-     * @param id                 идентификатор статуса задачи
-     * @param taskStatusUpdateDto данные для частичного обновления TaskStatus
-     * @return обновленный объект TaskStatus или сообщение об ошибке
+     * @param id идентификатор статуса задачи
+     * @param taskStatusUpdateDto DTO для частичного обновления
+     * @return обновленный статус задачи или ошибка
      */
     @PatchMapping("/{id}")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<?> partialUpdateTaskStatus(@PathVariable Long id,
-                                                     @RequestBody TaskStatusUpdateDto taskStatusUpdateDto) {
-        LOGGER.info("Received request to partially update TaskStatus with id: {}", id);
+    public final ResponseEntity<?> partialUpdateTaskStatus(
+            @PathVariable Long id,
+            @RequestBody TaskStatusUpdateDto taskStatusUpdateDto) {
+        LOGGER.info("Partially updating task status with ID: {}", id);
         try {
             TaskStatus updatedTaskStatus = taskStatusService.partialUpdateTaskStatus(id, taskStatusUpdateDto);
             return ResponseEntity.ok(updatedTaskStatus);
         } catch (RuntimeException e) {
+            LOGGER.error("Error updating task status: {}", e.getMessage());
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 
     /**
-     * Удаляет статус задачи по его идентификатору.
+     * Удаление статуса задачи по ID.
      *
      * @param id идентификатор статуса задачи
      * @return статус 204 при успешном удалении
      */
     @DeleteMapping("/{id}")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<Void> deleteTaskStatus(@PathVariable Long id) {
-        LOGGER.info("Deleting task status with id: {}", id);
+    public final ResponseEntity<Void> deleteTaskStatus(@PathVariable Long id) {
+        LOGGER.info("Deleting task status with ID: {}", id);
         taskStatusService.deleteTaskStatus(id);
         return ResponseEntity.noContent().build();
     }
