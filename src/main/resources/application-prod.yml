@@ -1,9 +1,9 @@
 spring:
   datasource:
-    url: ${DATABASE_URL}
+    url: jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}
     driver-class-name: org.postgresql.Driver
-    username: ${DATABASE_USERNAME}
-    password: ${DATABASE_PASSWORD}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
   jpa:
     hibernate:
       ddl-auto: update
@@ -11,3 +11,5 @@ spring:
     open-in-view: false
   sentry:
     dsn: ${SENTRY_DSN_PROD}
+
+    url: ${DATABASE_URL}
