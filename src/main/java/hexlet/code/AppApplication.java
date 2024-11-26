@@ -16,7 +16,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import java.util.Collections;
 import java.util.List;
 
-@SpringBootApplication
+@SpringBootApplication(scanBasePackages = "hexlet.code")
 public class AppApplication implements CommandLineRunner {
 
     @Autowired

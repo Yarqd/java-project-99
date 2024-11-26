@@ -7,17 +7,7 @@ import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -48,7 +38,6 @@ public class TaskStatusController {
      * @return список статусов задач
      */
     @GetMapping
-    @PreAuthorize("isAuthenticated()")
     public final ResponseEntity<List<TaskStatus>> getAllTaskStatuses(
             @RequestParam(value = "name", required = false) String name) {
         LOGGER.info("Fetching all task statuses");
@@ -72,7 +61,6 @@ public class TaskStatusController {
      * @return статус задачи или 404, если не найден
      */
     @GetMapping("/{id}")
-    @PreAuthorize("isAuthenticated()")
     public final ResponseEntity<TaskStatus> getTaskStatusById(@PathVariable Long id) {
         LOGGER.info("Fetching task status with ID: {}", id);
         TaskStatus taskStatus = taskStatusService.getTaskStatusById(id);
@@ -86,7 +74,6 @@ public class TaskStatusController {
      * @return созданный статус задачи с кодом 201
      */
     @PostMapping
-    @PreAuthorize("isAuthenticated()")
     public final ResponseEntity<TaskStatus> createTaskStatus(@RequestBody TaskStatus taskStatus) {
         LOGGER.info("Creating task status: {}", taskStatus);
         TaskStatus createdTaskStatus = taskStatusService.createTaskStatus(taskStatus);
@@ -101,7 +88,6 @@ public class TaskStatusController {
      * @return обновленный статус задачи или 404, если не найден
      */
     @PutMapping("/{id}")
-    @PreAuthorize("isAuthenticated()")
     public final ResponseEntity<TaskStatus> updateTaskStatus(
             @PathVariable Long id,
             @Valid @RequestBody TaskStatus updatedTaskStatus) {
@@ -131,7 +117,6 @@ public class TaskStatusController {
      * @return обновленный статус задачи или ошибка
      */
     @PatchMapping("/{id}")
-    @PreAuthorize("isAuthenticated()")
     public final ResponseEntity<?> partialUpdateTaskStatus(
             @PathVariable Long id,
             @RequestBody TaskStatusUpdateDto taskStatusUpdateDto) {
@@ -152,7 +137,6 @@ public class TaskStatusController {
      * @return статус 204 при успешном удалении
      */
     @DeleteMapping("/{id}")
-    @PreAuthorize("isAuthenticated()")
     public final ResponseEntity<Void> deleteTaskStatus(@PathVariable Long id) {
         LOGGER.info("Deleting task status with ID: {}", id);
         taskStatusService.deleteTaskStatus(id);

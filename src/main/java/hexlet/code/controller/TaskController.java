@@ -6,15 +6,7 @@ import hexlet.code.repository.TaskRepository;
 import hexlet.code.service.TaskStatusService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,7 +33,6 @@ public class TaskController {
      * @return список задач с заголовком для пагинации
      */
     @GetMapping
-    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<List<Task>> getTasks() {
         LOGGER.info("Fetching all tasks");
         List<Task> tasks = taskRepository.findAll();
@@ -58,7 +49,6 @@ public class TaskController {
      * @return задача или статус 404
      */
     @GetMapping("/{id}")
-    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Task> getTaskById(@PathVariable Long id) {
         LOGGER.info("Fetching task with ID: {}", id);
         return taskRepository.findById(id)
@@ -76,7 +66,6 @@ public class TaskController {
      * @return созданная задача с кодом состояния 201
      */
     @PostMapping
-    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Object> createTask(@RequestBody Task task) {
         LOGGER.info("Creating new task: {}", task);
 
@@ -108,7 +97,6 @@ public class TaskController {
      * @return обновленная задача или статус 404
      */
     @PutMapping("/{id}")
-    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Task> updateTask(@PathVariable Long id, @RequestBody Task updatedTask) {
         LOGGER.info("Updating task with ID: {}", id);
         return taskRepository.findById(id)
@@ -134,7 +122,6 @@ public class TaskController {
      * @return статус 204 или 404
      */
     @DeleteMapping("/{id}")
-    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Object> deleteTask(@PathVariable Long id) {
         LOGGER.info("Deleting task with ID: {}", id);
         return taskRepository.findById(id)
