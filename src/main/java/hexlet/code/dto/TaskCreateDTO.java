@@ -154,6 +154,13 @@ public class TaskCreateDTO {
         this.taskLabelId = taskLabelId;
     }
 
+    /**
+     * Переопределяет метод toString.
+     * Этот метод можно переопределить в наследниках, если требуется изменить формат вывода.
+     * При переопределении обязательно учитывайте, что метод используется для логирования.
+     *
+     * @return строковое представление объекта TaskCreateDTO.
+     */
     @Override
     public String toString() {
         return "TaskCreateDTO{"
