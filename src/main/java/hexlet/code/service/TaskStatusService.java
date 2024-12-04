@@ -83,11 +83,15 @@ public class TaskStatusService {
     public TaskStatus getDefaultTaskStatus() {
         LOGGER.info("Fetching default task status: {}", DEFAULT_STATUS_NAME);
         return taskStatusRepository.findByName(DEFAULT_STATUS_NAME)
-                .orElseThrow(() -> {
-                    LOGGER.error("Default TaskStatus not found: {}", DEFAULT_STATUS_NAME);
-                    return new RuntimeException("Default TaskStatus not found");
+                .orElseGet(() -> {
+                    LOGGER.warn("Default TaskStatus not found. Creating new one.");
+                    TaskStatus defaultStatus = new TaskStatus();
+                    defaultStatus.setName(DEFAULT_STATUS_NAME);
+                    defaultStatus.setSlug("to-do");
+                    return taskStatusRepository.save(defaultStatus);
                 });
     }
+
 
     /**
      * Полное обновление статуса задачи.

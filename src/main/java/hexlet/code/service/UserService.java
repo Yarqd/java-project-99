@@ -23,13 +23,25 @@ import java.util.stream.Collectors;
 public class UserService {
 
     @Autowired
-    private UserRepository userRepository;
+    public UserRepository userRepository;
 
     @Autowired
     private RoleRepository roleRepository;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+
+    /**
+     * Получение объекта User по идентификатору.
+     *
+     * @param id идентификатор пользователя
+     * @return объект User
+     * @throws RuntimeException если пользователь не найден
+     */
+    public User findUserById(Long id) {
+        return userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("User not found with ID: " + id));
+    }
 
     /**
      * Создание нового пользователя с заданными ролями.
@@ -95,8 +107,6 @@ public class UserService {
 
         // Проверяем права доступа
         if (!currentUsername.equals(user.getEmail()) && !isAdmin(currentUsername)) {
-            // Логируем проблему или бросаем RuntimeException
-            System.err.println("Access denied for user: " + currentUsername);
             throw new RuntimeException("Access denied. You don't have permission to update this user");
         }
 
@@ -137,8 +147,9 @@ public class UserService {
 
     /**
      * Удаление пользователя.
-     * @param id - id пользователя
-     * @param currentUsername - имя пользователя
+     *
+     * @param id идентификатор пользователя
+     * @param currentUsername имя текущего пользователя
      */
     @Transactional
     public void deleteUser(Long id, String currentUsername) throws AccessDeniedException {

@@ -1,23 +1,22 @@
 package hexlet.code.controller;
 
+import hexlet.code.dto.TaskCreateDTO;
 import hexlet.code.model.Task;
 import hexlet.code.model.TaskStatus;
+import hexlet.code.model.User;
 import hexlet.code.repository.TaskRepository;
 import hexlet.code.service.TaskStatusService;
+import hexlet.code.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Контроллер для работы с задачами (Tasks).
@@ -34,15 +33,21 @@ public class TaskController {
     @Autowired
     private TaskStatusService taskStatusService;
 
+    @Autowired
+    private UserService userService;
+
     /**
-     * Получает список задач с заголовком X-Total-Count для фронтенда.
+     * Получает список задач.
      *
-     * @return список задач с заголовком для пагинации
+     * @return список задач
      */
     @GetMapping
-    public ResponseEntity<List<Task>> getTasks() {
+    public ResponseEntity<List<Map<String, Object>>> getTasks() {
         LOGGER.info("Fetching all tasks");
-        List<Task> tasks = taskRepository.findAll();
+        List<Map<String, Object>> tasks = taskRepository.findAll()
+                .stream()
+                .map(this::formatTaskResponse)
+                .collect(Collectors.toList());
 
         return ResponseEntity.ok()
                 .header("X-Total-Count", String.valueOf(tasks.size()))
@@ -56,70 +61,66 @@ public class TaskController {
      * @return задача или статус 404
      */
     @GetMapping("/{id}")
-    public ResponseEntity<Task> getTaskById(@PathVariable Long id) {
+    public ResponseEntity<?> getTaskById(@PathVariable Long id) {
         LOGGER.info("Fetching task with ID: {}", id);
+
         return taskRepository.findById(id)
-                .map(ResponseEntity::ok)
+                .map(task -> {
+                    Map<String, Object> response = formatTaskResponse(task); // Формируем ответ
+                    return ResponseEntity.ok().body(response); // Возвращаем как ResponseEntity
+                })
                 .orElseGet(() -> {
                     LOGGER.warn("Task with ID: {} not found", id);
-                    return ResponseEntity.notFound().build();
+                    return ResponseEntity.notFound().build(); // Возвращаем статус 404
                 });
     }
 
     /**
      * Создает новую задачу.
      *
-     * @param task объект задачи для создания
-     * @return созданная задача с кодом состояния 201
+     * @param taskCreateDTO DTO задачи для создания
+     * @return созданная задача
      */
     @PostMapping
-    public ResponseEntity<Object> createTask(@RequestBody Task task) {
-        LOGGER.info("Creating new task: {}", task);
+    public ResponseEntity<Object> createTask(@RequestBody TaskCreateDTO taskCreateDTO) {
+        LOGGER.info("Creating new task: {}", taskCreateDTO);
 
-        if (task.getName() == null || task.getName().isEmpty()) {
+        if (taskCreateDTO.getName() == null || taskCreateDTO.getName().isEmpty()) {
             LOGGER.error("Task name is required");
             return ResponseEntity.badRequest().body("Task name is required");
         }
 
-        if (task.getTaskStatus() == null) {
-            TaskStatus defaultStatus = taskStatusService.getDefaultTaskStatus();
-            if (defaultStatus == null) {
-                LOGGER.error("Default TaskStatus is not available");
-                return ResponseEntity.badRequest().body("Default TaskStatus is not available");
+        Task task = new Task();
+        task.setName(taskCreateDTO.getName());
+        task.setDescription(taskCreateDTO.getDescription());
+        task.setIndex(taskCreateDTO.getIndex());
+
+        // Устанавливаем исполнителя
+        if (taskCreateDTO.getAssigneeId() != null) {
+            User assignee = getAssignee(taskCreateDTO.getAssigneeId());
+            if (assignee == null) {
+                return ResponseEntity.badRequest().body("Assignee not found");
             }
+            task.setAssignee(assignee);
+        }
+
+        // Устанавливаем статус задачи
+        if (taskCreateDTO.getStatusId() != null) {
+            TaskStatus taskStatus = taskStatusService.getTaskStatusById(taskCreateDTO.getStatusId());
+            if (taskStatus == null) {
+                LOGGER.error("TaskStatus not found with ID: {}", taskCreateDTO.getStatusId());
+                return ResponseEntity.badRequest().body("TaskStatus not found");
+            }
+            task.setTaskStatus(taskStatus);
+        } else {
+            TaskStatus defaultStatus = taskStatusService.getDefaultTaskStatus();
             task.setTaskStatus(defaultStatus);
-            LOGGER.info("Setting default TaskStatus: {}", defaultStatus);
         }
 
         Task createdTask = taskRepository.save(task);
         LOGGER.info("Task created successfully: {}", createdTask);
-        return ResponseEntity.status(201).body(createdTask);
-    }
 
-    /**
-     * Обновляет существующую задачу.
-     *
-     * @param id          идентификатор задачи
-     * @param updatedTask обновленные данные задачи
-     * @return обновленная задача или статус 404
-     */
-    @PutMapping("/{id}")
-    public ResponseEntity<Task> updateTask(@PathVariable Long id, @RequestBody Task updatedTask) {
-        LOGGER.info("Updating task with ID: {}", id);
-        return taskRepository.findById(id)
-                .map(task -> {
-                    task.setName(updatedTask.getName());
-                    task.setDescription(updatedTask.getDescription());
-                    task.setTaskStatus(updatedTask.getTaskStatus());
-                    task.setAssignee(updatedTask.getAssignee());
-                    Task savedTask = taskRepository.save(task);
-                    LOGGER.info("Task updated successfully: {}", savedTask);
-                    return ResponseEntity.ok(savedTask);
-                })
-                .orElseGet(() -> {
-                    LOGGER.warn("Task with ID: {} not found", id);
-                    return ResponseEntity.notFound().build();
-                });
+        return ResponseEntity.status(201).body(formatTaskResponse(createdTask));
     }
 
     /**
@@ -141,5 +142,39 @@ public class TaskController {
                     LOGGER.warn("Task with ID: {} not found", id);
                     return ResponseEntity.notFound().build();
                 });
+    }
+
+    /**
+     * Форматирует задачу для возврата клиенту.
+     *
+     * @param task задача
+     * @return отформатированная задача
+     */
+    private Map<String, Object> formatTaskResponse(Task task) {
+        Map<String, Object> response = new LinkedHashMap<>();
+        response.put("id", task.getId());
+        response.put("index", task.getIndex());
+        response.put("createdAt", task.getCreatedAt());
+        response.put("assignee_id", task.getAssignee() != null ? task.getAssignee().getId() : null);
+        response.put("title", task.getName());
+        response.put("content", task.getDescription());
+        response.put("status", task.getTaskStatus() != null ? task.getTaskStatus().getName() : null);
+        response.put("labels", task.getLabels().stream().map(label -> label.getName()).collect(Collectors.toList()));
+        return response;
+    }
+
+    /**
+     * Получает исполнителя задачи по его идентификатору.
+     *
+     * @param assigneeId идентификатор исполнителя
+     * @return объект User или null, если пользователь не найден
+     */
+    private User getAssignee(Long assigneeId) {
+        try {
+            return userService.findUserById(assigneeId);
+        } catch (RuntimeException e) {
+            LOGGER.error("Assignee not found with ID: {}", assigneeId);
+            return null;
+        }
     }
 }
