@@ -1,7 +1,7 @@
 package hexlet.code.service;
 
-import hexlet.code.model.TaskStatus;
 import hexlet.code.dto.TaskStatusUpdateDto;
+import hexlet.code.model.TaskStatus;
 import hexlet.code.repository.TaskStatusRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -10,20 +10,33 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
+/**
+ * Сервис для управления статусами задач (TaskStatus).
+ */
 @Service
 public class TaskStatusService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(TaskStatusService.class);
+    private static final String DEFAULT_STATUS_NAME = "To Do";
 
     private final TaskStatusRepository taskStatusRepository;
 
+    /**
+     * Конструктор сервиса для работы с TaskStatus.
+     *
+     * @param taskStatusRepository репозиторий для работы со статусами задач
+     */
     public TaskStatusService(TaskStatusRepository taskStatusRepository) {
         LOGGER.info("Initializing TaskStatusService with TaskStatusRepository: {}", taskStatusRepository);
         this.taskStatusRepository = taskStatusRepository;
     }
 
-    private static final String DEFAULT_STATUS_NAME = "To Do";
-
+    /**
+     * Создает новый статус задачи.
+     *
+     * @param taskStatus объект TaskStatus для создания
+     * @return созданный статус задачи
+     */
     @Transactional
     public TaskStatus createTaskStatus(TaskStatus taskStatus) {
         LOGGER.info("Creating task status: {}", taskStatus);
@@ -33,6 +46,11 @@ public class TaskStatusService {
         return savedStatus;
     }
 
+    /**
+     * Получает список всех статусов задач.
+     *
+     * @return список всех статусов задач
+     */
     public List<TaskStatus> getAllTaskStatuses() {
         LOGGER.info("Service: Fetching all task statuses from the repository");
         List<TaskStatus> statuses = taskStatusRepository.findAll();
@@ -40,6 +58,13 @@ public class TaskStatusService {
         return statuses;
     }
 
+    /**
+     * Получает статус задачи по идентификатору.
+     *
+     * @param id идентификатор статуса задачи
+     * @return найденный статус задачи
+     * @throws RuntimeException если статус не найден
+     */
     public TaskStatus getTaskStatusById(Long id) {
         LOGGER.info("Fetching task status by ID: {}", id);
         return taskStatusRepository.findById(id)
@@ -49,6 +74,12 @@ public class TaskStatusService {
                 });
     }
 
+    /**
+     * Получает статус задачи по умолчанию.
+     *
+     * @return статус задачи по умолчанию
+     * @throws RuntimeException если статус по умолчанию не найден
+     */
     public TaskStatus getDefaultTaskStatus() {
         LOGGER.info("Fetching default task status: {}", DEFAULT_STATUS_NAME);
         return taskStatusRepository.findByName(DEFAULT_STATUS_NAME)
@@ -58,6 +89,13 @@ public class TaskStatusService {
                 });
     }
 
+    /**
+     * Полное обновление статуса задачи.
+     *
+     * @param id        идентификатор статуса задачи
+     * @param taskStatus обновленные данные статуса задачи
+     * @return обновленный статус задачи
+     */
     @Transactional
     public TaskStatus updateTaskStatus(Long id, TaskStatus taskStatus) {
         LOGGER.info("Updating task status with ID: {}", id);
@@ -70,6 +108,13 @@ public class TaskStatusService {
         return updatedStatus;
     }
 
+    /**
+     * Частичное обновление статуса задачи.
+     *
+     * @param id                   идентификатор статуса задачи
+     * @param taskStatusUpdateDto объект DTO для обновления статуса
+     * @return обновленный статус задачи
+     */
     @Transactional
     public TaskStatus partialUpdateTaskStatus(Long id, TaskStatusUpdateDto taskStatusUpdateDto) {
         LOGGER.info("Partially updating task status with ID: {}", id);
@@ -93,6 +138,12 @@ public class TaskStatusService {
         return updatedStatus;
     }
 
+    /**
+     * Удаляет статус задачи по идентификатору.
+     *
+     * @param id идентификатор статуса задачи
+     * @throws RuntimeException если статус не найден
+     */
     @Transactional
     public void deleteTaskStatus(Long id) {
         LOGGER.info("Deleting task status with ID: {}", id);
@@ -104,6 +155,12 @@ public class TaskStatusService {
         LOGGER.info("Task status with ID: {} deleted successfully.", id);
     }
 
+    /**
+     * Валидирует объект TaskStatus.
+     *
+     * @param taskStatus объект для проверки
+     * @throws IllegalArgumentException если данные некорректны
+     */
     private void validateTaskStatus(TaskStatus taskStatus) {
         if (taskStatus.getName() == null || taskStatus.getName().isEmpty()) {
             LOGGER.error("TaskStatus validation failed: name is null or empty.");
