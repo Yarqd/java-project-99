@@ -52,9 +52,9 @@ public class TaskStatusService {
      * @return список всех статусов задач
      */
     public List<TaskStatus> getAllTaskStatuses() {
-        LOGGER.info("Service: Fetching all task statuses from the repository");
+        LOGGER.info("Fetching all task statuses");
         List<TaskStatus> statuses = taskStatusRepository.findAll();
-        LOGGER.info("Service: Retrieved {} task statuses from the repository", statuses.size());
+        LOGGER.info("Retrieved {} task statuses", statuses.size());
         return statuses;
     }
 
@@ -63,7 +63,6 @@ public class TaskStatusService {
      *
      * @param id идентификатор статуса задачи
      * @return найденный статус задачи
-     * @throws RuntimeException если статус не найден
      */
     public TaskStatus getTaskStatusById(Long id) {
         LOGGER.info("Fetching task status by ID: {}", id);
@@ -75,10 +74,25 @@ public class TaskStatusService {
     }
 
     /**
+     * Получает статус задачи по имени.
+     *
+     * @param slug имя статуса
+     * @return статус задачи
+     */
+    public TaskStatus getTaskStatusByName(String slug) {
+        LOGGER.info("Fetching task status by slug: {}", slug);
+        return taskStatusRepository.findBySlugIgnoreCase(slug)
+                .orElseThrow(() -> {
+                    LOGGER.error("Task status not found with slug: {}", slug);
+                    return new RuntimeException("TaskStatus not found");
+                });
+    }
+
+
+    /**
      * Получает статус задачи по умолчанию.
      *
      * @return статус задачи по умолчанию
-     * @throws RuntimeException если статус по умолчанию не найден
      */
     public TaskStatus getDefaultTaskStatus() {
         LOGGER.info("Fetching default task status: {}", DEFAULT_STATUS_NAME);
@@ -91,7 +105,6 @@ public class TaskStatusService {
                     return taskStatusRepository.save(defaultStatus);
                 });
     }
-
 
     /**
      * Полное обновление статуса задачи.
@@ -116,28 +129,23 @@ public class TaskStatusService {
      * Частичное обновление статуса задачи.
      *
      * @param id                   идентификатор статуса задачи
-     * @param taskStatusUpdateDto объект DTO для обновления статуса
+     * @param taskStatusUpdateDto объект DTO для частичного обновления
      * @return обновленный статус задачи
      */
     @Transactional
     public TaskStatus partialUpdateTaskStatus(Long id, TaskStatusUpdateDto taskStatusUpdateDto) {
         LOGGER.info("Partially updating task status with ID: {}", id);
-        TaskStatus taskStatus = getTaskStatusById(id);
+        TaskStatus existingTaskStatus = getTaskStatusById(id);
 
-        if (taskStatusUpdateDto.getName() != null) {
-            taskStatus.setName(taskStatusUpdateDto.getName());
+        if (taskStatusUpdateDto.getName() != null && !taskStatusUpdateDto.getName().isEmpty()) {
+            existingTaskStatus.setName(taskStatusUpdateDto.getName());
         }
 
-        if (taskStatusUpdateDto.getSlug() != null) {
-            taskStatus.setSlug(taskStatusUpdateDto.getSlug());
+        if (taskStatusUpdateDto.getSlug() != null && !taskStatusUpdateDto.getSlug().isEmpty()) {
+            existingTaskStatus.setSlug(taskStatusUpdateDto.getSlug());
         }
 
-        if (!taskStatusUpdateDto.hasUpdates()) {
-            LOGGER.warn("No updates provided for task status with ID: {}", id);
-            throw new IllegalArgumentException("No fields provided for update");
-        }
-
-        TaskStatus updatedStatus = taskStatusRepository.save(taskStatus);
+        TaskStatus updatedStatus = taskStatusRepository.save(existingTaskStatus);
         LOGGER.info("Partially updated task status: {}", updatedStatus);
         return updatedStatus;
     }
@@ -146,7 +154,6 @@ public class TaskStatusService {
      * Удаляет статус задачи по идентификатору.
      *
      * @param id идентификатор статуса задачи
-     * @throws RuntimeException если статус не найден
      */
     @Transactional
     public void deleteTaskStatus(Long id) {
@@ -156,7 +163,7 @@ public class TaskStatusService {
             throw new RuntimeException("TaskStatus not found");
         }
         taskStatusRepository.deleteById(id);
-        LOGGER.info("Task status with ID: {} deleted successfully.", id);
+        LOGGER.info("Task status with ID: {} deleted successfully", id);
     }
 
     /**

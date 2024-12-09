@@ -12,4 +12,6 @@ public interface TaskStatusRepository extends JpaRepository<TaskStatus, Long> {
     Optional<TaskStatus> findByName(String name);
 
     boolean existsBySlug(String slug);
+
+    Optional<TaskStatus> findBySlugIgnoreCase(String slug);
 }

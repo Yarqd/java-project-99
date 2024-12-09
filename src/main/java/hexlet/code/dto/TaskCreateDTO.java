@@ -35,10 +35,10 @@ public class TaskCreateDTO {
     private Long assigneeId;
 
     /**
-     * Идентификатор статуса задачи.
+     * Статус задачи (например, "draft", "to_be_fixed").
      */
-    @JsonProperty("status_id")
-    private Long statusId;
+    @JsonProperty("status")
+    private String status;
 
     /**
      * Идентификатор метки задачи.
@@ -119,21 +119,21 @@ public class TaskCreateDTO {
     }
 
     /**
-     * Возвращает идентификатор статуса задачи.
+     * Возвращает статус задачи.
      *
-     * @return идентификатор статуса задачи.
+     * @return статус задачи.
      */
-    public Long getStatusId() {
-        return statusId;
+    public String getStatus() {
+        return status;
     }
 
     /**
-     * Устанавливает идентификатор статуса задачи.
+     * Устанавливает статус задачи.
      *
-     * @param statusId идентификатор статуса задачи.
+     * @param status статус задачи.
      */
-    public void setStatusId(Long statusId) {
-        this.statusId = statusId;
+    public void setStatus(String status) {
+        this.status = status;
     }
 
     /**
@@ -156,8 +156,6 @@ public class TaskCreateDTO {
 
     /**
      * Переопределяет метод toString.
-     * Этот метод можно переопределить в наследниках, если требуется изменить формат вывода.
-     * При переопределении обязательно учитывайте, что метод используется для логирования.
      *
      * @return строковое представление объекта TaskCreateDTO.
      */
@@ -168,7 +166,7 @@ public class TaskCreateDTO {
                 + ", name='" + name + '\''
                 + ", description='" + description + '\''
                 + ", assigneeId=" + assigneeId
-                + ", statusId=" + statusId
+                + ", status='" + status + '\''
                 + ", taskLabelId=" + taskLabelId
                 + '}';
     }
