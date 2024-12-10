@@ -89,23 +89,33 @@ public class TaskControllerTest {
         status.setSlug("in_progress");
         taskStatusRepository.save(status);
 
-        // Создаем задачу с указанным статусом
+        // Создаем пользователя-исполнителя
+        User assignee = new User();
+        assignee.setEmail("assignee@example.com");
+        assignee.setPassword(passwordEncoder.encode("password"));
+        userRepository.save(assignee);
+
+        // Создаем задачу с указанным статусом и исполнителем
         Task task = new Task();
         task.setName("Test Task");
         task.setTaskStatus(status);
-        taskRepository.saveAndFlush(task); // Принудительно сохраняем и загружаем задачу
+        task.setAssignee(assignee);
+        taskRepository.saveAndFlush(task); // Принудительно сохраняем задачу
 
-        // Загрузка ленивых связей перед проверкой
-        task = taskRepository.findById(task.getId()).orElseThrow();
-
-        mockMvc.perform(get("/api/tasks/" + task.getId())
+        // Выполняем GET запрос для получения задачи
+        MvcResult result = mockMvc.perform(get("/api/tasks/" + task.getId())
                         .header("Authorization", jwtToken)
                         .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk())
+                .andReturn();
 
-        // Проверяем, что задача действительно существует в базе
-        Task savedTask = taskRepository.findById(task.getId()).orElseThrow();
-        assertEquals("Test Task", savedTask.getName());
-        assertEquals("In Progress", savedTask.getTaskStatus().getName());
+        // Проверяем, что задача возвращена корректно
+        String responseBody = result.getResponse().getContentAsString();
+        Map<String, Object> responseTask = objectMapper.readValue(responseBody, Map.class);
+
+        assertEquals(task.getId(), Long.valueOf((Integer) responseTask.get("id")));
+        assertEquals("Test Task", responseTask.get("title"));
+        assertEquals("In Progress", responseTask.get("status"));
+        assertEquals(assignee.getId(), Long.valueOf((Integer) responseTask.get("assignee_id")));
     }
 }

@@ -1,17 +1,18 @@
 package hexlet.code.dto;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.Set;
 
 /**
- * Data Transfer Object для создания задачи.
+ * DTO для создания задачи.
+ * <p>
+ * Этот класс содержит данные для создания задачи.
+ * При наследовании добавьте обработку нестандартных случаев использования.
+ * </p>
  */
-@JsonIgnoreProperties(ignoreUnknown = true)
 public class TaskCreateDTO {
 
-    @JsonProperty("index")
-    private Integer index;
+    private Long index;
 
     @JsonProperty("title")
     private String name;
@@ -22,56 +23,115 @@ public class TaskCreateDTO {
     @JsonProperty("assignee_id")
     private Long assigneeId;
 
-    @JsonProperty("status")
     private String status;
 
-    @JsonProperty("task_label_ids")
+    @JsonProperty("taskLabelIds")
     private Set<Long> taskLabelIds;
 
-    public Integer getIndex() {
+    /**
+     * Получение индекса задачи.
+     *
+     * @return Индекс задачи.
+     */
+    public Long getIndex() {
         return index;
     }
 
-    public void setIndex(Integer index) {
+    /**
+     * Установка индекса задачи.
+     *
+     * @param index Индекс задачи.
+     */
+    public void setIndex(Long index) {
         this.index = index;
     }
 
+    /**
+     * Получение названия задачи.
+     *
+     * @return Название задачи.
+     */
     public String getName() {
         return name;
     }
 
+    /**
+     * Установка названия задачи.
+     *
+     * @param name Название задачи.
+     */
     public void setName(String name) {
         this.name = name;
     }
 
+    /**
+     * Получение описания задачи.
+     *
+     * @return Описание задачи.
+     */
     public String getDescription() {
         return description;
     }
 
+    /**
+     * Установка описания задачи.
+     *
+     * @param description Описание задачи.
+     */
     public void setDescription(String description) {
         this.description = description;
     }
 
+    /**
+     * Получение ID исполнителя задачи.
+     *
+     * @return ID исполнителя задачи.
+     */
     public Long getAssigneeId() {
         return assigneeId;
     }
 
+    /**
+     * Установка ID исполнителя задачи.
+     *
+     * @param assigneeId ID исполнителя задачи.
+     */
     public void setAssigneeId(Long assigneeId) {
         this.assigneeId = assigneeId;
     }
 
+    /**
+     * Получение статуса задачи.
+     *
+     * @return Статус задачи.
+     */
     public String getStatus() {
         return status;
     }
 
+    /**
+     * Установка статуса задачи.
+     *
+     * @param status Статус задачи.
+     */
     public void setStatus(String status) {
         this.status = status;
     }
 
+    /**
+     * Получение меток задачи.
+     *
+     * @return Набор меток задачи.
+     */
     public Set<Long> getTaskLabelIds() {
         return taskLabelIds;
     }
 
+    /**
+     * Установка меток задачи.
+     *
+     * @param taskLabelIds Набор меток задачи.
+     */
     public void setTaskLabelIds(Set<Long> taskLabelIds) {
         this.taskLabelIds = taskLabelIds;
     }

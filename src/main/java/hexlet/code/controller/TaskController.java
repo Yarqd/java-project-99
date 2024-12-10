@@ -9,9 +9,15 @@ import hexlet.code.repository.LabelRepository;
 import hexlet.code.repository.TaskRepository;
 import hexlet.code.service.TaskStatusService;
 import hexlet.code.service.UserService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,6 +30,10 @@ import java.util.stream.Collectors;
 
 /**
  * Контроллер для работы с задачами.
+ * <p>
+ * Этот класс предоставляет методы для работы с задачами.
+ * При наследовании обязательно переопределите методы с учетом требований безопасности и логирования.
+ * </p>
  */
 @RestController
 @RequestMapping("/api/tasks")
@@ -43,6 +53,15 @@ public class TaskController {
     @Autowired
     private UserService userService;
 
+    /**
+     * Получение списка задач.
+     * <p>
+     * Этот метод возвращает все задачи, хранящиеся в системе.
+     * При переопределении необходимо сохранить формат возвращаемых данных.
+     * </p>
+     *
+     * @return Список задач в формате JSON.
+     */
     @GetMapping
     public ResponseEntity<List<Map<String, Object>>> getTasks() {
         LOGGER.info("Fetching all tasks");
@@ -50,25 +69,53 @@ public class TaskController {
                 .stream()
                 .map(this::formatTaskResponse)
                 .collect(Collectors.toList());
-
         return ResponseEntity.ok()
                 .header("X-Total-Count", String.valueOf(tasks.size()))
                 .body(tasks);
     }
 
-    @PostMapping
-    public ResponseEntity<Object> createTask(@RequestBody TaskCreateDTO taskCreateDTO) {
-        LOGGER.info("Creating new task: {}", taskCreateDTO);
+    /**
+     * Получение задачи по ID.
+     * <p>
+     * Этот метод ищет задачу в репозитории по указанному идентификатору.
+     * При наследовании добавьте обработку нестандартных ошибок.
+     * </p>
+     *
+     * @param id ID задачи.
+     * @return Задача в формате JSON.
+     */
+    @GetMapping("/{id}")
+    public ResponseEntity<Object> getTaskById(@PathVariable Long id) {
+        LOGGER.info("Fetching task with ID: {}", id);
+        Task task = taskRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Task not found"));
+        return ResponseEntity.ok(formatTaskResponse(task));
+    }
 
-        if (taskCreateDTO.getName() == null || taskCreateDTO.getName().isEmpty()) {
-            LOGGER.error("Task name is required");
-            return ResponseEntity.badRequest().body("Task name is required");
-        }
+    /**
+     * Создание новой задачи.
+     * <p>
+     * Этот метод создает задачу на основе данных, переданных в теле запроса.
+     * При переопределении убедитесь, что данные валидируются и сохраняются корректно.
+     * </p>
+     *
+     * @param taskCreateDTO DTO с данными для создания задачи.
+     * @return Созданная задача в формате JSON.
+     */
+    @PostMapping
+    public ResponseEntity<Object> createTask(@RequestBody @Valid TaskCreateDTO taskCreateDTO) {
+        LOGGER.info("Creating new task: {}", taskCreateDTO);
 
         Task task = new Task();
         task.setName(taskCreateDTO.getName());
         task.setDescription(taskCreateDTO.getDescription());
-        task.setIndex(taskCreateDTO.getIndex());
+
+        if (taskCreateDTO.getIndex() == null) {
+            int nextIndex = (int) taskRepository.count() + 1;
+            task.setIndex(nextIndex);
+        } else {
+            task.setIndex(taskCreateDTO.getIndex().intValue());
+        }
 
         if (taskCreateDTO.getAssigneeId() != null) {
             User assignee = getAssignee(taskCreateDTO.getAssigneeId());
@@ -81,7 +128,6 @@ public class TaskController {
         if (taskCreateDTO.getStatus() != null) {
             TaskStatus taskStatus = taskStatusService.getTaskStatusByName(taskCreateDTO.getStatus());
             if (taskStatus == null) {
-                LOGGER.error("TaskStatus not found with name: {}", taskCreateDTO.getStatus());
                 return ResponseEntity.badRequest().body("TaskStatus not found");
             }
             task.setTaskStatus(taskStatus);
@@ -105,12 +151,7 @@ public class TaskController {
     }
 
     private User getAssignee(Long assigneeId) {
-        try {
-            return userService.findUserById(assigneeId);
-        } catch (RuntimeException e) {
-            LOGGER.error("Assignee not found with ID: {}", assigneeId);
-            return null;
-        }
+        return userService.findUserById(assigneeId);
     }
 
     private Map<String, Object> formatTaskResponse(Task task) {
