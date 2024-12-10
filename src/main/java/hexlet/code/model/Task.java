@@ -1,23 +1,13 @@
 package hexlet.code.model;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.JoinTable;
-import jakarta.persistence.ManyToMany;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
-import java.time.Instant;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.persistence.*;
+import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
  * Класс Task представляет задачу в системе, которая имеет статус, исполнителя и может быть связана с метками.
- * Содержит основную информацию о задаче, такую как имя, описание, статус и метки.
  */
 @Entity
 @Table(name = "tasks")
@@ -29,20 +19,28 @@ public final class Task {
 
     private Integer index;
 
-    @Column
-    private String name;
+    @Column(nullable = false, updatable = false)
+    private LocalDate createdAt = LocalDate.now();
 
-    @Column
-    private String description;
-
-    @ManyToOne(optional = false)
-    @JoinColumn(name = "task_status_id")
-    private TaskStatus taskStatus;
-
+    @JsonProperty("assignee_id")
     @ManyToOne
     @JoinColumn(name = "assignee_id")
     private User assignee;
 
+    @JsonProperty("title")
+    @Column(nullable = false)
+    private String name;
+
+    @JsonProperty("content")
+    @Column
+    private String description;
+
+    @JsonProperty("status")
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "task_status_id")
+    private TaskStatus taskStatus;
+
+    @JsonProperty("taskLabelIds")
     @ManyToMany
     @JoinTable(
             name = "task_labels",
@@ -51,155 +49,67 @@ public final class Task {
     )
     private Set<Label> labels = new HashSet<>();
 
-    @Column(nullable = false, updatable = false)
-    private final Instant createdAt = Instant.now();
-
-    /**
-     * Возвращает идентификатор задачи.
-     *
-     * @return идентификатор задачи.
-     */
     public Long getId() {
         return id;
     }
 
-    /**
-     * Устанавливает идентификатор задачи.
-     *
-     * @param id идентификатор задачи.
-     */
     public void setId(Long id) {
         this.id = id;
     }
 
-    /**
-     * Возвращает индекс задачи.
-     *
-     * @return индекс задачи.
-     */
     public Integer getIndex() {
         return index;
     }
 
-    /**
-     * Устанавливает индекс задачи.
-     *
-     * @param index индекс задачи.
-     */
     public void setIndex(Integer index) {
         this.index = index;
     }
 
-    /**
-     * Возвращает название задачи.
-     *
-     * @return название задачи.
-     */
-    public String getName() {
-        return name;
+    public LocalDate getCreatedAt() {
+        return createdAt;
     }
 
-    /**
-     * Устанавливает название задачи.
-     *
-     * @param name название задачи.
-     */
-    public void setName(String name) {
-        this.name = name;
+    public void setCreatedAt(LocalDate createdAt) {
+        this.createdAt = createdAt;
     }
 
-    /**
-     * Возвращает описание задачи.
-     *
-     * @return описание задачи.
-     */
-    public String getDescription() {
-        return description;
-    }
-
-    /**
-     * Устанавливает описание задачи.
-     *
-     * @param description описание задачи.
-     */
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
-    /**
-     * Возвращает статус задачи.
-     *
-     * @return статус задачи.
-     */
-    public TaskStatus getTaskStatus() {
-        return taskStatus;
-    }
-
-    /**
-     * Устанавливает статус задачи.
-     *
-     * @param taskStatus статус задачи.
-     */
-    public void setTaskStatus(TaskStatus taskStatus) {
-        this.taskStatus = taskStatus;
-    }
-
-    /**
-     * Возвращает исполнителя задачи.
-     *
-     * @return исполнитель задачи.
-     */
     public User getAssignee() {
         return assignee;
     }
 
-    /**
-     * Устанавливает исполнителя задачи.
-     *
-     * @param assignee исполнитель задачи.
-     */
     public void setAssignee(User assignee) {
         this.assignee = assignee;
     }
 
-    /**
-     * Возвращает дату создания задачи.
-     *
-     * @return дата создания задачи.
-     */
-    public Instant getCreatedAt() {
-        return createdAt;
+    public String getName() {
+        return name;
     }
 
-    /**
-     * Возвращает метки задачи.
-     *
-     * @return множество меток задачи.
-     */
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public TaskStatus getTaskStatus() {
+        return taskStatus;
+    }
+
+    public void setTaskStatus(TaskStatus taskStatus) {
+        this.taskStatus = taskStatus;
+    }
+
     public Set<Label> getLabels() {
         return labels;
     }
 
-    /**
-     * Устанавливает метки задачи.
-     *
-     * @param labels множество меток задачи.
-     */
     public void setLabels(Set<Label> labels) {
         this.labels = labels;
-    }
-
-    @Override
-    public String toString() {
-        return "Task{"
-                + "id=" + id
-                + ", index=" + index
-                + ", name='" + name + '\''
-                + ", description='" + description + '\''
-                + ", taskStatus=" + (taskStatus != null ? taskStatus.getName() : "null")
-                + ", assignee=" + (assignee != null ? assignee.getFirstName() + " " + assignee.getLastName() : "null")
-                + ", labels=" + labels.stream().map(Label::getName).collect(Collectors.toSet())
-                + ", createdAt=" + createdAt
-                + '}';
     }
 }
