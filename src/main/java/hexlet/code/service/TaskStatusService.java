@@ -142,17 +142,15 @@ public class TaskStatusService {
 
         if (taskStatusUpdateDto.getSlug() != null && !taskStatusUpdateDto.getSlug().isEmpty()) {
             existingTaskStatus.setSlug(taskStatusUpdateDto.getSlug());
-        } else if (existingTaskStatus.getSlug() == null || existingTaskStatus.getSlug().isEmpty()) {
-            // Устанавливаем значение по умолчанию для slug
-            existingTaskStatus.setSlug("default-slug");
-            LOGGER.warn("Slug was empty. Setting default value for slug: default-slug");
+        } else {
+            LOGGER.info("Slug not provided. Retaining existing slug: {}", existingTaskStatus.getSlug());
+            // Здесь не обновляем slug, оставляем старое значение
         }
 
         TaskStatus updatedStatus = taskStatusRepository.save(existingTaskStatus);
         LOGGER.info("Partially updated task status: {}", updatedStatus);
         return updatedStatus;
     }
-
 
     /**
      * Удаляет статус задачи по идентификатору.
