@@ -121,20 +121,27 @@ public class TaskStatusService {
         LOGGER.info("Partially updating task status with ID: {}", id);
         TaskStatus existingTaskStatus = getTaskStatusById(id);
 
+        // Обновляем name, если оно передано
         if (taskStatusUpdateDto.getName() != null && !taskStatusUpdateDto.getName().isEmpty()) {
             existingTaskStatus.setName(taskStatusUpdateDto.getName());
         }
 
+        // Если slug не передан, сохраняем старое значение
         if (taskStatusUpdateDto.getSlug() != null && !taskStatusUpdateDto.getSlug().isEmpty()) {
             existingTaskStatus.setSlug(taskStatusUpdateDto.getSlug());
+        } else {
+            LOGGER.info("Slug not provided in request. Retaining existing slug: {}", existingTaskStatus.getSlug());
         }
 
+        // Проверка обновлённого объекта
         validateTaskStatus(existingTaskStatus);
 
+        // Сохранение изменений
         TaskStatus updatedStatus = taskStatusRepository.save(existingTaskStatus);
         LOGGER.info("Partially updated task status: {}", updatedStatus);
         return updatedStatus;
     }
+
 
     /**
      * Удаляет статус задачи по ID. Метод выбросит исключение, если статус не найден.
