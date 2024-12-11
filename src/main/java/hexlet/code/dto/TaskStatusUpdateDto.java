@@ -1,8 +1,16 @@
 package hexlet.code.dto;
 
+import jakarta.validation.constraints.Size;
+
+/**
+ * DTO для частичного обновления статуса задачи.
+ */
 public final class TaskStatusUpdateDto {
 
+    @Size(max = 255, message = "Name must not exceed 255 characters")
     private String name;
+
+    @Size(max = 255, message = "Slug must not exceed 255 characters")
     private String slug;
 
     public String getName() {
@@ -21,6 +29,11 @@ public final class TaskStatusUpdateDto {
         this.slug = slug;
     }
 
+    /**
+     * Проверяет, есть ли данные для обновления.
+     *
+     * @return true, если хотя бы одно поле обновлено, иначе false
+     */
     public boolean hasUpdates() {
         return name != null || slug != null;
     }
