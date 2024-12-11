@@ -88,7 +88,6 @@ public class TaskStatusService {
                 });
     }
 
-
     /**
      * Получает статус задачи по умолчанию.
      *
@@ -109,7 +108,7 @@ public class TaskStatusService {
     /**
      * Полное обновление статуса задачи.
      *
-     * @param id        идентификатор статуса задачи
+     * @param id идентификатор статуса задачи
      * @param taskStatus обновленные данные статуса задачи
      * @return обновленный статус задачи
      */
@@ -128,7 +127,7 @@ public class TaskStatusService {
     /**
      * Частичное обновление статуса задачи.
      *
-     * @param id                   идентификатор статуса задачи
+     * @param id идентификатор статуса задачи
      * @param taskStatusUpdateDto объект DTO для частичного обновления
      * @return обновленный статус задачи
      */
@@ -143,6 +142,11 @@ public class TaskStatusService {
 
         if (taskStatusUpdateDto.getSlug() != null && !taskStatusUpdateDto.getSlug().isEmpty()) {
             existingTaskStatus.setSlug(taskStatusUpdateDto.getSlug());
+        }
+
+        if (existingTaskStatus.getSlug() == null || existingTaskStatus.getSlug().isEmpty()) {
+            LOGGER.error("TaskStatus validation failed: slug is null or empty.");
+            throw new RuntimeException("TaskStatus slug must not be null or empty.");
         }
 
         TaskStatus updatedStatus = taskStatusRepository.save(existingTaskStatus);
