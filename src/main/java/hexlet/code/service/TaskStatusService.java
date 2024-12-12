@@ -95,7 +95,7 @@ public class TaskStatusService {
     }
 
     /**
-     * Полностью обновляет статус задачи. Все поля будут перезаписаны.
+     * Полностью обновляет статус задачи. Если какие-то поля не переданы, они остаются неизменными.
      * @param id идентификатор статуса задачи
      * @param taskStatus объект с новыми данными
      * @return обновлённый статус задачи
@@ -103,11 +103,25 @@ public class TaskStatusService {
     @Transactional
     public TaskStatus updateTaskStatus(Long id, TaskStatus taskStatus) {
         LOGGER.info("Updating task status with ID: {}", id);
-        validateTaskStatus(taskStatus);
+
         TaskStatus existingTaskStatus = getTaskStatusById(id);
-        existingTaskStatus.setName(taskStatus.getName());
-        existingTaskStatus.setSlug(taskStatus.getSlug());
-        return taskStatusRepository.save(existingTaskStatus);
+
+        // Обновляем только переданные поля
+        if (taskStatus.getName() != null && !taskStatus.getName().isEmpty()) {
+            existingTaskStatus.setName(taskStatus.getName());
+        }
+
+        if (taskStatus.getSlug() != null && !taskStatus.getSlug().isEmpty()) {
+            existingTaskStatus.setSlug(taskStatus.getSlug());
+        } else {
+            LOGGER.info("Slug not provided. Retaining existing slug: {}", existingTaskStatus.getSlug());
+        }
+
+        validateTaskStatus(existingTaskStatus);
+
+        TaskStatus savedTaskStatus = taskStatusRepository.save(existingTaskStatus);
+        LOGGER.info("Updated task status: {}", savedTaskStatus);
+        return savedTaskStatus;
     }
 
     /**
@@ -141,7 +155,6 @@ public class TaskStatusService {
         LOGGER.info("Partially updated task status: {}", updatedStatus);
         return updatedStatus;
     }
-
 
     /**
      * Удаляет статус задачи по ID. Метод выбросит исключение, если статус не найден.
