@@ -8,7 +8,7 @@ import jakarta.validation.constraints.Size;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public final class UserCreateDTO {
 
-    private Long id; // Добавляем поле id
+    private Long id;
 
     @Email(message = "Неверный формат email")
     @NotBlank(message = "Email обязателен")
@@ -20,7 +20,7 @@ public final class UserCreateDTO {
     @Size(min = 3, message = "Пароль должен содержать как минимум 3 символа")
     private String password;
 
-    // Геттеры и сеттеры для id
+    // Геттеры и сеттеры
     public Long getId() {
         return id;
     }
@@ -29,7 +29,6 @@ public final class UserCreateDTO {
         this.id = id;
     }
 
-    // Остальные геттеры и сеттеры для других полей
     public String getEmail() {
         return email;
     }
