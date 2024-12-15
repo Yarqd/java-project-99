@@ -67,12 +67,12 @@ public class TaskStatusService {
 
     /**
      * Получает статус задачи по имени. Метод вернёт null, если статус не найден.
-     * @param name имя статуса задачи
+     * @param slug имя статуса задачи
      * @return найденный статус задачи или null, если статус не найден
      */
-    public TaskStatus getTaskStatusByName(String name) {
-        LOGGER.info("Fetching task status by name: {}", name);
-        return taskStatusRepository.findByName(name).orElse(null);
+    public TaskStatus getTaskStatusByName(String slug) {
+        LOGGER.info("Fetching task status by slug: {}", slug);
+        return taskStatusRepository.findBySlug(slug).orElse(null);
     }
 
     /**
