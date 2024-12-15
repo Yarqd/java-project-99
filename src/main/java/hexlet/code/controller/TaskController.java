@@ -152,7 +152,7 @@ public class TaskController {
         response.put("assignee_id", task.getAssignee() != null ? task.getAssignee().getId() : null);
         response.put("title", task.getName());
         response.put("content", task.getDescription());
-        response.put("status", task.getTaskStatus() != null ? task.getTaskStatus().getName() : null);
+        response.put("status", task.getTaskStatus() != null ? task.getTaskStatus().getSlug() : null);
         response.put("taskLabelIds", task.getLabels().stream().map(Label::getId).collect(Collectors.toSet()));
         return response;
     }
