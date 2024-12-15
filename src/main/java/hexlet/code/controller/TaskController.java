@@ -110,7 +110,7 @@ public class TaskController {
 
         // Устанавливаем статус задачи
         if (taskCreateDTO.getStatus() != null) {
-            TaskStatus taskStatus = taskStatusService.getTaskStatusByName(taskCreateDTO.getStatus());
+            TaskStatus taskStatus = taskStatusService.getTaskStatusBySlug(taskCreateDTO.getStatus());
             if (taskStatus == null) {
                 LOGGER.error("TaskStatus not found: {}", taskCreateDTO.getStatus());
                 return ResponseEntity.badRequest().body("TaskStatus not found: " + taskCreateDTO.getStatus());

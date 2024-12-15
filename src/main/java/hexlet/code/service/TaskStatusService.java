@@ -12,16 +12,14 @@ import java.util.List;
 
 /**
  * Сервис для управления статусами задач (TaskStatus).
- *
- * Этот класс не предназначен для расширения. Все методы предоставляют доступ к бизнес-логике
- * и защищены от некорректного использования.
  */
 @Service
 public class TaskStatusService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(TaskStatusService.class);
-    private static final String DEFAULT_STATUS_NAME = "To Do";
-    private static final String DEFAULT_SLUG = "to-do";
+
+    private static final String DEFAULT_STATUS_NAME = "Default";
+    private static final String DEFAULT_SLUG = "default";
 
     private final TaskStatusRepository taskStatusRepository;
 
@@ -30,19 +28,26 @@ public class TaskStatusService {
     }
 
     /**
-     * Создаёт новый статус задачи. Метод рекомендуется использовать в контроллере.
+     * Создаёт новый статус задачи.
+     *
      * @param taskStatus объект статуса задачи
      * @return созданный статус задачи
      */
     @Transactional
     public TaskStatus createTaskStatus(TaskStatus taskStatus) {
         LOGGER.info("Creating task status: {}", taskStatus);
-        validateTaskStatus(taskStatus);
+
+        // Проверяем только slug, поле name может быть null
+        if (taskStatus.getSlug() == null || taskStatus.getSlug().isEmpty()) {
+            throw new IllegalArgumentException("TaskStatus slug must not be null or empty");
+        }
+
         return taskStatusRepository.save(taskStatus);
     }
 
     /**
-     * Возвращает список всех статусов задач. Метод используется для получения данных.
+     * Возвращает список всех статусов задач.
+     *
      * @return список всех статусов задач
      */
     public List<TaskStatus> getAllTaskStatuses() {
@@ -51,7 +56,8 @@ public class TaskStatusService {
     }
 
     /**
-     * Получает статус задачи по ID. Метод выбросит исключение, если статус не найден.
+     * Получает статус задачи по ID.
+     *
      * @param id идентификатор статуса задачи
      * @return найденный статус задачи
      * @throws RuntimeException если статус задачи не найден
@@ -66,32 +72,52 @@ public class TaskStatusService {
     }
 
     /**
-     * Получает статус задачи по имени. Метод вернёт null, если статус не найден.
-     * @param slug имя статуса задачи
+     * Получает статус задачи по slug.
+     *
+     * @param slug уникальный идентификатор статуса задачи
+     * @return найденный статус задачи
+     * @throws RuntimeException если статус задачи не найден
+     */
+    public TaskStatus getTaskStatusBySlug(String slug) {
+        LOGGER.info("Fetching task status by slug: {}", slug);
+        return taskStatusRepository.findBySlugIgnoreCase(slug)
+                .orElseThrow(() -> {
+                    LOGGER.error("Task status not found for slug: {}", slug);
+                    return new RuntimeException("TaskStatus not found: " + slug);
+                });
+    }
+
+    /**
+     * Получает статус задачи по имени.
+     *
+     * @param name имя статуса задачи
      * @return найденный статус задачи или null, если статус не найден
      */
-    public TaskStatus getTaskStatusByName(String slug) {
-        LOGGER.info("Fetching task status by slug: {}", slug);
-        return taskStatusRepository.findBySlug(slug).orElse(null);
+    public TaskStatus getTaskStatusByName(String name) {
+        LOGGER.info("Fetching task status by name: {}", name);
+        return taskStatusRepository.findByName(name).orElse(null);
     }
 
     /**
      * Возвращает статус задачи по умолчанию. Если статус не найден, он создаётся.
+     *
      * @return статус задачи по умолчанию
      */
+    @Transactional
     public TaskStatus getDefaultTaskStatus() {
         LOGGER.info("Fetching default task status: {}", DEFAULT_STATUS_NAME);
-        return taskStatusRepository.findByName(DEFAULT_STATUS_NAME)
+        return taskStatusRepository.findBySlug(DEFAULT_SLUG)
                 .orElseGet(() -> {
                     LOGGER.warn("Default TaskStatus not found. Creating new one.");
-                    TaskStatus defaultStatus = new TaskStatus(DEFAULT_STATUS_NAME, DEFAULT_SLUG);
+                    TaskStatus defaultStatus = new TaskStatus(null, DEFAULT_SLUG);
                     return taskStatusRepository.save(defaultStatus);
                 });
     }
 
     /**
-     * Полностью обновляет статус задачи. Если какие-то поля не переданы, они остаются неизменными.
-     * @param id идентификатор статуса задачи
+     * Полностью обновляет статус задачи.
+     *
+     * @param id         идентификатор статуса задачи
      * @param taskStatus объект с новыми данными
      * @return обновлённый статус задачи
      */
@@ -102,59 +128,46 @@ public class TaskStatusService {
         TaskStatus existingTaskStatus = getTaskStatusById(id);
 
         // Обновляем только переданные поля
-        if (taskStatus.getName() != null && !taskStatus.getName().isEmpty()) {
+        if (taskStatus.getName() != null) {
             existingTaskStatus.setName(taskStatus.getName());
         }
 
         if (taskStatus.getSlug() != null && !taskStatus.getSlug().isEmpty()) {
             existingTaskStatus.setSlug(taskStatus.getSlug());
-        } else {
-            LOGGER.info("Slug not provided. Retaining existing slug: {}", existingTaskStatus.getSlug());
         }
 
-        validateTaskStatus(existingTaskStatus);
-
-        TaskStatus savedTaskStatus = taskStatusRepository.save(existingTaskStatus);
-        LOGGER.info("Updated task status: {}", savedTaskStatus);
-        return savedTaskStatus;
+        return taskStatusRepository.save(existingTaskStatus);
     }
 
     /**
-     * Частично обновляет статус задачи. Поля, которые не переданы, остаются неизменными.
-     * @param id идентификатор статуса задачи
+     * Частично обновляет статус задачи.
+     *
+     * @param id                   идентификатор статуса задачи
      * @param taskStatusUpdateDto объект с изменяемыми данными
      * @return обновлённый статус задачи
      */
     @Transactional
     public TaskStatus partialUpdateTaskStatus(Long id, TaskStatusUpdateDto taskStatusUpdateDto) {
         LOGGER.info("Partially updating task status with ID: {}", id);
+
         TaskStatus existingTaskStatus = getTaskStatusById(id);
 
-        // Обновляем name, если оно передано
-        if (taskStatusUpdateDto.getName() != null && !taskStatusUpdateDto.getName().isEmpty()) {
+        // Обновляем только переданные поля
+        if (taskStatusUpdateDto.getName() != null) {
             existingTaskStatus.setName(taskStatusUpdateDto.getName());
         }
 
-        // Если slug не передан, сохраняем старое значение
         if (taskStatusUpdateDto.getSlug() != null && !taskStatusUpdateDto.getSlug().isEmpty()) {
             existingTaskStatus.setSlug(taskStatusUpdateDto.getSlug());
-        } else {
-            LOGGER.info("Slug not provided in request. Retaining existing slug: {}", existingTaskStatus.getSlug());
         }
 
-        // Проверка обновлённого объекта
-        validateTaskStatus(existingTaskStatus);
-
-        // Сохранение изменений
-        TaskStatus updatedStatus = taskStatusRepository.save(existingTaskStatus);
-        LOGGER.info("Partially updated task status: {}", updatedStatus);
-        return updatedStatus;
+        return taskStatusRepository.save(existingTaskStatus);
     }
 
     /**
-     * Удаляет статус задачи по ID. Метод выбросит исключение, если статус не найден.
+     * Удаляет статус задачи по ID.
+     *
      * @param id идентификатор статуса задачи
-     * @throws RuntimeException если статус задачи не найден
      */
     @Transactional
     public void deleteTaskStatus(Long id) {
@@ -164,19 +177,5 @@ public class TaskStatusService {
         }
         taskStatusRepository.deleteById(id);
         LOGGER.info("Task status with ID: {} deleted successfully", id);
-    }
-
-    /**
-     * Валидация статуса задачи. Проверяет, что имя и slug не являются пустыми.
-     * @param taskStatus статус задачи для проверки
-     * @throws IllegalArgumentException если имя или slug некорректны
-     */
-    private void validateTaskStatus(TaskStatus taskStatus) {
-        if (taskStatus.getName() == null || taskStatus.getName().isEmpty()) {
-            throw new IllegalArgumentException("TaskStatus name must not be null or empty");
-        }
-        if (taskStatus.getSlug() == null || taskStatus.getSlug().isEmpty()) {
-            throw new IllegalArgumentException("TaskStatus slug must not be null or empty");
-        }
     }
 }
