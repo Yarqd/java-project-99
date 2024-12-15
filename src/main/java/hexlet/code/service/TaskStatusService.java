@@ -66,18 +66,13 @@ public class TaskStatusService {
     }
 
     /**
-     * Получает статус задачи по имени. Метод выбросит исключение, если статус не найден.
+     * Получает статус задачи по имени. Метод вернёт null, если статус не найден.
      * @param name имя статуса задачи
-     * @return найденный статус задачи
-     * @throws RuntimeException если статус задачи не найден
+     * @return найденный статус задачи или null, если статус не найден
      */
     public TaskStatus getTaskStatusByName(String name) {
         LOGGER.info("Fetching task status by name: {}", name);
-        return taskStatusRepository.findByName(name)
-                .orElseThrow(() -> {
-                    LOGGER.error("Task status not found with name: {}", name);
-                    return new RuntimeException("TaskStatus not found with name: " + name);
-                });
+        return taskStatusRepository.findByName(name).orElse(null);
     }
 
     /**

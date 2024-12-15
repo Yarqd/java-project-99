@@ -28,13 +28,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-/**
- * Контроллер для работы с задачами.
- * <p>
- * Этот класс предоставляет методы для работы с задачами.
- * При наследовании обязательно переопределите методы с учетом требований безопасности и логирования.
- * </p>
- */
 @RestController
 @RequestMapping("/api/tasks")
 public class TaskController {
@@ -55,10 +48,6 @@ public class TaskController {
 
     /**
      * Получение списка задач.
-     * <p>
-     * Этот метод возвращает все задачи, хранящиеся в системе.
-     * При переопределении необходимо сохранить формат возвращаемых данных.
-     * </p>
      *
      * @return Список задач в формате JSON.
      */
@@ -76,10 +65,6 @@ public class TaskController {
 
     /**
      * Получение задачи по ID.
-     * <p>
-     * Этот метод ищет задачу в репозитории по указанному идентификатору.
-     * При наследовании добавьте обработку нестандартных ошибок.
-     * </p>
      *
      * @param id ID задачи.
      * @return Задача в формате JSON.
@@ -94,10 +79,6 @@ public class TaskController {
 
     /**
      * Создание новой задачи.
-     * <p>
-     * Этот метод создает задачу на основе данных, переданных в теле запроса.
-     * При переопределении убедитесь, что данные валидируются и сохраняются корректно.
-     * </p>
      *
      * @param taskCreateDTO DTO с данными для создания задачи.
      * @return Созданная задача в формате JSON.
@@ -110,6 +91,7 @@ public class TaskController {
         task.setName(taskCreateDTO.getName());
         task.setDescription(taskCreateDTO.getDescription());
 
+        // Устанавливаем индекс задачи
         if (taskCreateDTO.getIndex() == null) {
             int nextIndex = (int) taskRepository.count() + 1;
             task.setIndex(nextIndex);
@@ -117,6 +99,7 @@ public class TaskController {
             task.setIndex(taskCreateDTO.getIndex().intValue());
         }
 
+        // Устанавливаем исполнителя задачи
         if (taskCreateDTO.getAssigneeId() != null) {
             User assignee = getAssignee(taskCreateDTO.getAssigneeId());
             if (assignee == null) {
@@ -125,17 +108,24 @@ public class TaskController {
             task.setAssignee(assignee);
         }
 
+        // Устанавливаем статус задачи
         if (taskCreateDTO.getStatus() != null) {
             TaskStatus taskStatus = taskStatusService.getTaskStatusByName(taskCreateDTO.getStatus());
             if (taskStatus == null) {
-                return ResponseEntity.badRequest().body("TaskStatus not found");
+                LOGGER.error("TaskStatus not found: {}", taskCreateDTO.getStatus());
+                return ResponseEntity.badRequest().body("TaskStatus not found: " + taskCreateDTO.getStatus());
             }
             task.setTaskStatus(taskStatus);
         } else {
             TaskStatus defaultStatus = taskStatusService.getDefaultTaskStatus();
+            if (defaultStatus == null) {
+                LOGGER.error("Default TaskStatus not found");
+                return ResponseEntity.internalServerError().body("Default TaskStatus not found");
+            }
             task.setTaskStatus(defaultStatus);
         }
 
+        // Устанавливаем метки задачи
         if (taskCreateDTO.getTaskLabelIds() != null && !taskCreateDTO.getTaskLabelIds().isEmpty()) {
             Set<Label> labels = taskCreateDTO.getTaskLabelIds().stream()
                     .map(id -> labelRepository.findById(id)

@@ -1,5 +1,6 @@
 package hexlet.code.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.Set;
 
@@ -10,6 +11,7 @@ import java.util.Set;
  * При наследовании добавьте обработку нестандартных случаев использования.
  * </p>
  */
+@JsonIgnoreProperties(ignoreUnknown = true) // Игнорирование неизвестных полей
 public class TaskCreateDTO {
 
     private Long index;
