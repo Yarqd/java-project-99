@@ -115,7 +115,7 @@ public class TaskControllerTest {
 
         assertEquals(task.getId(), Long.valueOf((Integer) responseTask.get("id")));
         assertEquals("Test Task", responseTask.get("title"));
-        assertEquals("In Progress", responseTask.get("status"));
+        assertEquals("in_progress", responseTask.get("status"));
         assertEquals(assignee.getId(), Long.valueOf((Integer) responseTask.get("assignee_id")));
     }
 }
