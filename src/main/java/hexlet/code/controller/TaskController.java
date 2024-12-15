@@ -12,9 +12,11 @@ import hexlet.code.service.UserService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -138,6 +140,77 @@ public class TaskController {
         LOGGER.info("Task created successfully: {}", createdTask);
 
         return ResponseEntity.status(201).body(formatTaskResponse(createdTask));
+    }
+
+    /**
+     * Обновление задачи по ID.
+     *
+     * @param id            ID задачи.
+     * @param taskCreateDTO DTO с данными для обновления задачи.
+     * @return Обновлённая задача в формате JSON.
+     */
+    @PutMapping("/{id}")
+    public ResponseEntity<Object> updateTask(@PathVariable Long id, @RequestBody @Valid TaskCreateDTO taskCreateDTO) {
+        LOGGER.info("Updating task with ID: {}", id);
+
+        // Проверяем существование задачи
+        Task existingTask = taskRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Task not found with ID: " + id));
+
+        // Обновляем поля задачи только если они переданы
+        if (taskCreateDTO.getName() != null) {
+            existingTask.setName(taskCreateDTO.getName());
+        }
+        if (taskCreateDTO.getDescription() != null) {
+            existingTask.setDescription(taskCreateDTO.getDescription());
+        }
+        if (taskCreateDTO.getStatus() != null) {
+            TaskStatus taskStatus = taskStatusService.getTaskStatusBySlug(taskCreateDTO.getStatus());
+            if (taskStatus == null) {
+                LOGGER.error("TaskStatus not found: {}", taskCreateDTO.getStatus());
+                return ResponseEntity.badRequest().body("TaskStatus not found: " + taskCreateDTO.getStatus());
+            }
+            existingTask.setTaskStatus(taskStatus);
+        }
+        if (taskCreateDTO.getTaskLabelIds() != null && !taskCreateDTO.getTaskLabelIds().isEmpty()) {
+            Set<Label> labels = taskCreateDTO.getTaskLabelIds().stream()
+                    .map(labelId -> labelRepository.findById(labelId)
+                            .orElseThrow(() -> new RuntimeException("Label not found: " + labelId)))
+                    .collect(Collectors.toSet());
+            existingTask.setLabels(labels);
+        }
+        if (taskCreateDTO.getAssigneeId() != null) {
+            User assignee = getAssignee(taskCreateDTO.getAssigneeId());
+            if (assignee == null) {
+                return ResponseEntity.badRequest().body("Assignee not found");
+            }
+            existingTask.setAssignee(assignee);
+        }
+
+        // Сохраняем изменения
+        Task updatedTask = taskRepository.save(existingTask);
+        LOGGER.info("Task updated successfully: {}", updatedTask);
+
+        return ResponseEntity.ok(formatTaskResponse(updatedTask));
+    }
+
+    /**
+     * Удаление задачи по ID.
+     *
+     * @param id ID задачи.
+     * @return Сообщение об успешном удалении.
+     */
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Object> deleteTask(@PathVariable Long id) {
+        LOGGER.info("Deleting task with ID: {}", id);
+
+        Task existingTask = taskRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Task not found with ID: " + id));
+
+        taskRepository.delete(existingTask);
+        LOGGER.info("Task deleted successfully with ID: {}", id);
+
+        return ResponseEntity.noContent().build();
     }
 
     private User getAssignee(Long assigneeId) {
