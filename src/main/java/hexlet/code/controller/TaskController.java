@@ -153,7 +153,7 @@ public class TaskController {
         response.put("title", task.getName());
         response.put("content", task.getDescription());
         response.put("status", task.getTaskStatus() != null ? task.getTaskStatus().getName() : null);
-        response.put("labels", task.getLabels().stream().map(Label::getId).collect(Collectors.toSet()));
+        response.put("taskLabelIds", task.getLabels().stream().map(Label::getId).collect(Collectors.toSet()));
         return response;
     }
 }
