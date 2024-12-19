@@ -12,14 +12,8 @@ import hexlet.code.service.UserService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -150,14 +144,13 @@ public class TaskController {
      * @return Обновлённая задача в формате JSON.
      */
     @PutMapping("/{id}")
+    @PreAuthorize("@securityService.isOwnerOfTask(#id)")
     public ResponseEntity<Object> updateTask(@PathVariable Long id, @RequestBody @Valid TaskCreateDTO taskCreateDTO) {
         LOGGER.info("Updating task with ID: {}", id);
 
-        // Проверяем существование задачи
         Task existingTask = taskRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Task not found with ID: " + id));
 
-        // Обновляем поля задачи только если они переданы
         if (taskCreateDTO.getName() != null) {
             existingTask.setName(taskCreateDTO.getName());
         }
@@ -167,7 +160,6 @@ public class TaskController {
         if (taskCreateDTO.getStatus() != null) {
             TaskStatus taskStatus = taskStatusService.getTaskStatusBySlug(taskCreateDTO.getStatus());
             if (taskStatus == null) {
-                LOGGER.error("TaskStatus not found: {}", taskCreateDTO.getStatus());
                 return ResponseEntity.badRequest().body("TaskStatus not found: " + taskCreateDTO.getStatus());
             }
             existingTask.setTaskStatus(taskStatus);
@@ -187,7 +179,6 @@ public class TaskController {
             existingTask.setAssignee(assignee);
         }
 
-        // Сохраняем изменения
         Task updatedTask = taskRepository.save(existingTask);
         LOGGER.info("Task updated successfully: {}", updatedTask);
 
@@ -201,6 +192,7 @@ public class TaskController {
      * @return Сообщение об успешном удалении.
      */
     @DeleteMapping("/{id}")
+    @PreAuthorize("@securityService.isOwnerOfTask(#id)")
     public ResponseEntity<Object> deleteTask(@PathVariable Long id) {
         LOGGER.info("Deleting task with ID: {}", id);
 
