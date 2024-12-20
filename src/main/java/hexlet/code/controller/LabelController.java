@@ -61,10 +61,14 @@ public class LabelController {
         LOGGER.info("Fetching label with ID: {}", id);
         return labelRepository.findById(id)
                 .map(label -> {
+                    // Преобразуем в DTO
                     LabelDTO labelDTO = new LabelDTO(label.getId(), label.getName(), label.getCreatedAt());
                     return ResponseEntity.ok(labelDTO);
                 })
-                .orElseGet(() -> ResponseEntity.notFound().build());
+                .orElseGet(() -> {
+                    LOGGER.warn("Label not found with ID: {}", id);
+                    return ResponseEntity.notFound().build();
+                });
     }
 
     /**
