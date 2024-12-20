@@ -10,6 +10,7 @@ import hexlet.code.repository.TaskRepository;
 import hexlet.code.service.TaskStatusService;
 import hexlet.code.service.UserService;
 import jakarta.validation.Valid;
+import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
@@ -55,10 +56,12 @@ public class TaskController {
      * @return Список задач в формате JSON.
      */
     @GetMapping
+    @Transactional(readOnly = true)
     public ResponseEntity<List<Map<String, Object>>> getTasks() {
         LOGGER.info("Fetching all tasks");
         List<Map<String, Object>> tasks = taskRepository.findAll()
                 .stream()
+                .peek(task -> Hibernate.initialize(task.getLabels())) // Инициализация labels
                 .map(this::formatTaskResponse)
                 .collect(Collectors.toList());
         return ResponseEntity.ok()
@@ -78,6 +81,7 @@ public class TaskController {
         LOGGER.info("Fetching task with ID: {}", id);
         Task task = taskRepository.findTaskWithLabelsById(id)
                 .orElseThrow(() -> new RuntimeException("Task not found"));
+        Hibernate.initialize(task.getLabels()); // Инициализация labels
         return ResponseEntity.ok(formatTaskResponse(task));
     }
 
@@ -88,6 +92,7 @@ public class TaskController {
      * @return Созданная задача в формате JSON.
      */
     @PostMapping
+    @Transactional
     public ResponseEntity<Object> createTask(@RequestBody @Valid TaskCreateDTO taskCreateDTO) {
         LOGGER.info("Creating new task: {}", taskCreateDTO);
 
@@ -115,17 +120,9 @@ public class TaskController {
         // Устанавливаем статус задачи
         if (taskCreateDTO.getStatus() != null) {
             TaskStatus taskStatus = taskStatusService.getTaskStatusBySlug(taskCreateDTO.getStatus());
-            if (taskStatus == null) {
-                LOGGER.error("TaskStatus not found: {}", taskCreateDTO.getStatus());
-                return ResponseEntity.badRequest().body("TaskStatus not found: " + taskCreateDTO.getStatus());
-            }
             task.setTaskStatus(taskStatus);
         } else {
             TaskStatus defaultStatus = taskStatusService.getDefaultTaskStatus();
-            if (defaultStatus == null) {
-                LOGGER.error("Default TaskStatus not found");
-                return ResponseEntity.internalServerError().body("Default TaskStatus not found");
-            }
             task.setTaskStatus(defaultStatus);
         }
 
@@ -152,6 +149,7 @@ public class TaskController {
      * @return Обновлённая задача в формате JSON.
      */
     @PutMapping("/{id}")
+    @Transactional
     public ResponseEntity<Object> updateTask(@PathVariable Long id, @RequestBody @Valid TaskCreateDTO taskCreateDTO) {
         LOGGER.info("Updating task with ID: {}", id);
 
@@ -168,10 +166,6 @@ public class TaskController {
         }
         if (taskCreateDTO.getStatus() != null) {
             TaskStatus taskStatus = taskStatusService.getTaskStatusBySlug(taskCreateDTO.getStatus());
-            if (taskStatus == null) {
-                LOGGER.error("TaskStatus not found: {}", taskCreateDTO.getStatus());
-                return ResponseEntity.badRequest().body("TaskStatus not found: " + taskCreateDTO.getStatus());
-            }
             existingTask.setTaskStatus(taskStatus);
         }
         if (taskCreateDTO.getTaskLabelIds() != null && !taskCreateDTO.getTaskLabelIds().isEmpty()) {
@@ -183,9 +177,6 @@ public class TaskController {
         }
         if (taskCreateDTO.getAssigneeId() != null) {
             User assignee = getAssignee(taskCreateDTO.getAssigneeId());
-            if (assignee == null) {
-                return ResponseEntity.badRequest().body("Assignee not found");
-            }
             existingTask.setAssignee(assignee);
         }
 
@@ -203,6 +194,7 @@ public class TaskController {
      * @return Сообщение об успешном удалении.
      */
     @DeleteMapping("/{id}")
+    @Transactional
     public ResponseEntity<Object> deleteTask(@PathVariable Long id) {
         LOGGER.info("Deleting task with ID: {}", id);
 

@@ -11,6 +11,7 @@ import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.FetchType;
 import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Set;
@@ -32,7 +33,7 @@ public final class Task {
     private LocalDate createdAt = LocalDate.now();
 
     @JsonProperty("assignee_id")
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "assignee_id")
     private User assignee;
 
@@ -45,12 +46,17 @@ public final class Task {
     private String description;
 
     @JsonProperty("status")
-    @ManyToOne(optional = false)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "task_status_id")
     private TaskStatus taskStatus;
 
+    /**
+     * Метки задачи.
+     * Используется FetchType.EAGER для автоматической подгрузки данных.
+     * Внимание: EAGER может повлиять на производительность при работе с большими наборами данных.
+     */
     @JsonProperty("taskLabelIds")
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "task_labels",
             joinColumns = @JoinColumn(name = "task_id"),
