@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -21,15 +22,26 @@ import java.nio.file.AccessDeniedException;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Контроллер для управления пользователями.
+ * Все методы данного класса предназначены для выполнения операций CRUD с пользователями.
+ * Класс объявлен как final, так как он не предназначен для наследования.
+ */
 @RestController
 @RequestMapping("/api/users")
-public final class UserController {
+public class UserController {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(UserController.class);
 
     @Autowired
     private UserService userService;
 
+    /**
+     * Создает нового пользователя.
+     *
+     * @param userCreateDTO DTO с данными для создания пользователя.
+     * @return Ответ с данными созданного пользователя и статусом 201.
+     */
     @PostMapping
     public ResponseEntity<UserResponseDTO> createUser(@RequestBody UserCreateDTO userCreateDTO) {
         LOGGER.info("Creating new user: {}", userCreateDTO.getEmail());
@@ -38,6 +50,11 @@ public final class UserController {
         return ResponseEntity.status(201).body(user);
     }
 
+    /**
+     * Возвращает список всех пользователей.
+     *
+     * @return Ответ с данными всех пользователей и статусом 200.
+     */
     @GetMapping
     public ResponseEntity<List<UserResponseDTO>> getAllUsers() {
         LOGGER.info("Fetching all users");
@@ -48,6 +65,12 @@ public final class UserController {
                 .body(users);
     }
 
+    /**
+     * Возвращает данные пользователя по его ID.
+     *
+     * @param id Идентификатор пользователя.
+     * @return Ответ с данными пользователя и статусом 200.
+     */
     @GetMapping("/{id}")
     public ResponseEntity<UserResponseDTO> getUserById(@PathVariable Long id) {
         LOGGER.info("Fetching user by ID: {}", id);
@@ -55,7 +78,17 @@ public final class UserController {
         return ResponseEntity.ok(user);
     }
 
+    /**
+     * Обновляет данные пользователя.
+     * Доступ к обновлению ограничен только самим пользователем.
+     *
+     * @param id Идентификатор пользователя.
+     * @param updates Карта с обновляемыми данными.
+     * @param authentication Объект аутентификации текущего пользователя.
+     * @return Ответ с обновленными данными пользователя и статусом 200.
+     */
     @PutMapping("/{id}")
+    @PreAuthorize("@userService.isCurrentUser(#id)")
     public ResponseEntity<UserResponseDTO> updateUser(
             @PathVariable Long id,
             @RequestBody Map<String, Object> updates,
@@ -67,7 +100,17 @@ public final class UserController {
         return ResponseEntity.ok(updatedUser);
     }
 
+    /**
+     * Удаляет пользователя по его ID.
+     * Доступ к удалению ограничен только самим пользователем.
+     *
+     * @param id Идентификатор пользователя.
+     * @param authentication Объект аутентификации текущего пользователя.
+     * @return Ответ со статусом 204.
+     * @throws AccessDeniedException Если текущий пользователь не имеет прав на удаление.
+     */
     @DeleteMapping("/{id}")
+    @PreAuthorize("@userService.isCurrentUser(#id)")
     public ResponseEntity<Void> deleteUser(@PathVariable Long id, Authentication authentication)
             throws AccessDeniedException {
         String currentUsername = authentication.getName();

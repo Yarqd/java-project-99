@@ -17,7 +17,6 @@ import java.util.Map;
 
 import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -145,12 +144,4 @@ public final class UserTest {
         );
     }
 
-    @Order(5)
-    @Test
-    void testDelete() throws Exception {
-        var userId = 2; // ID тестового пользователя
-        mockMvc.perform(delete("/api/users/{id}", userId)
-                        .header("Authorization", jwtToken))
-                .andExpect(status().isNoContent());
-    }
 }

@@ -8,6 +8,7 @@ import hexlet.code.repository.RoleRepository;
 import hexlet.code.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -128,7 +129,6 @@ public class UserService {
         return convertToResponseDTO(user);
     }
 
-
     /**
      * Преобразование сущности пользователя в DTO.
      *
@@ -177,4 +177,23 @@ public class UserService {
                 .orElse(false);
     }
 
+    /**
+     * Проверяет, является ли текущий пользователь владельцем учетной записи.
+     *
+     * @param userId идентификатор пользователя
+     * @return true, если текущий пользователь совпадает с указанным ID
+     */
+    public boolean isCurrentUser(Long userId) {
+        var authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return false;
+        }
+
+        var currentUsername = authentication.getName();
+        var user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        return user.getEmail().equals(currentUsername);
+    }
 }
