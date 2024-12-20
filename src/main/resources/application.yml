@@ -4,6 +4,6 @@ spring:
 
 logging:
   level:
-    root: DEBUG
-    org.springframework.web: DEBUG
-    org.hibernate: DEBUG
+    root: INFO
+    org.springframework.web: WARN
+    org.hibernate: WARN

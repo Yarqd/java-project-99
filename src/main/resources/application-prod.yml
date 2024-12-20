@@ -6,10 +6,11 @@ spring:
     password: ${DB_PASSWORD}
   jpa:
     hibernate:
-      ddl-auto: update
-    show-sql: true
+      ddl-auto: none
+    show-sql: false
     open-in-view: false
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
   sentry:
     dsn: ${SENTRY_DSN_PROD}
-
-    url: ${DATABASE_URL}
