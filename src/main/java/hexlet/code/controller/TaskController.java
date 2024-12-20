@@ -12,6 +12,7 @@ import hexlet.code.service.UserService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -72,9 +73,10 @@ public class TaskController {
      * @return Задача в формате JSON.
      */
     @GetMapping("/{id}")
+    @Transactional(readOnly = true)
     public ResponseEntity<Object> getTaskById(@PathVariable Long id) {
         LOGGER.info("Fetching task with ID: {}", id);
-        Task task = taskRepository.findById(id)
+        Task task = taskRepository.findTaskWithLabelsById(id)
                 .orElseThrow(() -> new RuntimeException("Task not found"));
         return ResponseEntity.ok(formatTaskResponse(task));
     }
