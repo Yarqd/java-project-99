@@ -1,6 +1,5 @@
 package hexlet.code.model;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -32,20 +31,16 @@ public final class Task {
     @Column(nullable = false, updatable = false)
     private LocalDate createdAt = LocalDate.now();
 
-    @JsonProperty("assignee_id")
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "assignee_id")
     private User assignee;
 
-    @JsonProperty("title")
     @Column(nullable = false)
     private String name;
 
-    @JsonProperty("content")
     @Column
     private String description;
 
-    @JsonProperty("status")
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "task_status_id")
     private TaskStatus taskStatus;
@@ -55,7 +50,6 @@ public final class Task {
      * Используется FetchType.EAGER для автоматической подгрузки данных.
      * Внимание: EAGER может повлиять на производительность при работе с большими наборами данных.
      */
-    @JsonProperty("taskLabelIds")
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "task_labels",

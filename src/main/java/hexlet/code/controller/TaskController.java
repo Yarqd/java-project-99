@@ -11,6 +11,8 @@ import hexlet.code.service.TaskStatusService;
 import hexlet.code.service.UserService;
 import jakarta.validation.Valid;
 import org.hibernate.Hibernate;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,9 +24,6 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -101,20 +100,15 @@ public class TaskController {
         task.setDescription(taskCreateDTO.getDescription());
 
         // Устанавливаем индекс задачи
-        if (taskCreateDTO.getIndex() == null) {
-            int nextIndex = (int) taskRepository.count() + 1;
-            task.setIndex(nextIndex);
-        } else {
-            task.setIndex(taskCreateDTO.getIndex().intValue());
-        }
+        int nextIndex = (int) taskRepository.count() + 1;
+        task.setIndex(nextIndex);
 
-        // Устанавливаем исполнителя задачи
+        // Устанавливаем исполнителя задачи (может быть null)
         if (taskCreateDTO.getAssigneeId() != null) {
             User assignee = getAssignee(taskCreateDTO.getAssigneeId());
-            if (assignee == null) {
-                return ResponseEntity.badRequest().body("Assignee not found");
-            }
             task.setAssignee(assignee);
+        } else {
+            task.setAssignee(null);
         }
 
         // Устанавливаем статус задачи
@@ -153,11 +147,9 @@ public class TaskController {
     public ResponseEntity<Object> updateTask(@PathVariable Long id, @RequestBody @Valid TaskCreateDTO taskCreateDTO) {
         LOGGER.info("Updating task with ID: {}", id);
 
-        // Проверяем существование задачи
         Task existingTask = taskRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Task not found with ID: " + id));
 
-        // Обновляем поля задачи только если они переданы
         if (taskCreateDTO.getName() != null) {
             existingTask.setName(taskCreateDTO.getName());
         }
@@ -168,19 +160,21 @@ public class TaskController {
             TaskStatus taskStatus = taskStatusService.getTaskStatusBySlug(taskCreateDTO.getStatus());
             existingTask.setTaskStatus(taskStatus);
         }
-        if (taskCreateDTO.getTaskLabelIds() != null && !taskCreateDTO.getTaskLabelIds().isEmpty()) {
+        if (taskCreateDTO.getTaskLabelIds() != null) {
             Set<Label> labels = taskCreateDTO.getTaskLabelIds().stream()
                     .map(labelId -> labelRepository.findById(labelId)
                             .orElseThrow(() -> new RuntimeException("Label not found: " + labelId)))
                     .collect(Collectors.toSet());
             existingTask.setLabels(labels);
         }
+        // Обновляем Assignee
         if (taskCreateDTO.getAssigneeId() != null) {
             User assignee = getAssignee(taskCreateDTO.getAssigneeId());
             existingTask.setAssignee(assignee);
+        } else {
+            existingTask.setAssignee(null);
         }
 
-        // Сохраняем изменения
         Task updatedTask = taskRepository.save(existingTask);
         LOGGER.info("Task updated successfully: {}", updatedTask);
 
@@ -188,10 +182,12 @@ public class TaskController {
     }
 
     /**
-     * Удаление задачи по ID.
+     * Удаляет задачу по указанному ID.
+     * Если класс наследуется, убедитесь, что в переопределённой версии метода
+     * сохраняется логика удаления задачи.
      *
-     * @param id ID задачи.
-     * @return Сообщение об успешном удалении.
+     * @param id ID задачи, которую нужно удалить
+     * @return Пустой ответ со статусом 204 No Content.
      */
     @DeleteMapping("/{id}")
     @Transactional

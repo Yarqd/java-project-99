@@ -1,6 +1,7 @@
 package hexlet.code.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import hexlet.code.dto.LabelDTO;
 import hexlet.code.model.Label;
 import hexlet.code.model.Task;
 import hexlet.code.model.TaskStatus;
@@ -122,12 +123,12 @@ public class LabelControllerTest {
 
     @Test
     public void testCreateLabel() throws Exception {
-        Label newLabel = new Label("Feature");
+        LabelDTO newLabelDTO = new LabelDTO(null, "Feature", null);
 
         mockMvc.perform(post("/api/labels")
                         .header("Authorization", jwtToken)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(newLabel)))
+                        .content(objectMapper.writeValueAsString(newLabelDTO))) // Отправляем DTO
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.name").value("Feature"));
 
@@ -136,14 +137,16 @@ public class LabelControllerTest {
         assertEquals("Feature", savedLabel.getName());
     }
 
+
     @Test
     public void testUpdateLabel() throws Exception {
-        Label updatedLabel = new Label("Updated Bug");
+        // Создаем DTO вместо Label
+        LabelDTO updatedLabelDTO = new LabelDTO(null, "Updated Bug", null);
 
         mockMvc.perform(put("/api/labels/" + label.getId())
                         .header("Authorization", jwtToken)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(updatedLabel)))
+                        .content(objectMapper.writeValueAsString(updatedLabelDTO))) // Отправляем DTO
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.name").value("Updated Bug"));
 
@@ -151,6 +154,7 @@ public class LabelControllerTest {
         Label savedLabel = labelRepository.findById(label.getId()).orElseThrow();
         assertEquals("Updated Bug", savedLabel.getName());
     }
+
 
     @Test
     public void testDeleteLabel() throws Exception {
@@ -167,22 +171,27 @@ public class LabelControllerTest {
 
     @Test
     public void testDeleteLabelWithTasks() throws Exception {
+        // Создаем статус задачи
         TaskStatus taskStatus = new TaskStatus("Draft", "draft");
         taskStatusRepository.save(taskStatus);
 
+        // Создаем метку
         Label newLabel = new Label("New Feature");
         labelRepository.save(newLabel);
 
+        // Создаем задачу, связанную с новой меткой
         Task task = new Task();
         task.setName("Test Task");
         task.setTaskStatus(taskStatus);
         task.getLabels().add(newLabel);
         taskRepository.save(task);
 
+        // Пытаемся удалить метку, связанную с задачами
         mockMvc.perform(delete("/api/labels/" + newLabel.getId())
                         .header("Authorization", jwtToken)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest())
                 .andExpect(content().string(containsString("Нельзя удалить метку, она связана с задачами.")));
     }
+
 }

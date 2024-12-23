@@ -8,6 +8,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.server.ResponseStatusException;
 
 /**
  * Глобальный обработчик исключений.
@@ -68,5 +69,20 @@ public class GlobalExceptionHandler {
     public ResponseEntity<String> handleGeneralException(Exception ex) {
         LOGGER.error("Unexpected error: {}", ex.getMessage(), ex);
         return new ResponseEntity<>("Unexpected error: " + ex.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    /**
+     * Обрабатывает исключения ResponseStatusException.
+     * Например, ошибки с явным указанием статуса (404, 400 и т.д.).
+     *
+     * @param ex исключение ResponseStatusException
+     * @return объект ResponseEntity с сообщением об ошибке и соответствующим статусом
+     */
+    @ExceptionHandler(ResponseStatusException.class)
+    public ResponseEntity<String> handleResponseStatusException(ResponseStatusException ex) {
+        LOGGER.error("Response status exception: {}", ex.getMessage(), ex);
+        return ResponseEntity
+                .status(ex.getStatusCode()) // Используем статус из ResponseStatusException
+                .body(ex.getReason()); // Сообщение из ResponseStatusException
     }
 }
